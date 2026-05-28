@@ -1,0 +1,58 @@
+1. Nhóm Quản lý Sách (Core Products)
+SACH (Sách): Bảng quan trọng nhất, lưu thông tin sản phẩm.
+
+id_sach: Khóa chính (PK), định danh duy nhất cho cuốn sách.
+
+ten_sach, mo_ta: Tên và giới thiệu chi tiết.
+
+isbn: Mã số chuẩn quốc tế của sách.
+
+gia: Giá bán hiện tại.
+
+so_luong_ton: Số lượng sách còn trong kho để hiển thị cho khách hàng.
+
+id_tacgia, id_nha_xb, id_danhmuc: Các khóa ngoại (FK) kết nối sách với tác giả, nhà xuất bản và danh mục tương ứng.
+
+TAC_GIA (Tác giả): Lưu thông tin người viết sách (id_tacgia, ten_tacgia, tieu_su).
+
+NHA_XUAT_BAN (Nhà xuất bản): Thông tin đơn vị phát hành (id_nha_xb, ten_nha_xb, dia_chi, website).
+
+DANH_MUC (Danh mục): Phân loại sách (ví dụ: Sách kinh tế, Văn học, Công nghệ) giúp khách hàng tìm kiếm dễ dàng.
+
+2. Nhóm Quản lý Khách hàng & Giỏ hàng
+KHACH_HANG (Khách hàng): Thông tin người dùng đăng ký tài khoản.
+
+id_khachhang: Định danh người dùng.
+
+ho_ten, email, password: Dùng để định danh và bảo mật tài khoản.
+
+dia_chi_giao: Địa chỉ mặc định để ship hàng.
+
+GIO_HANG (Giỏ hàng): Lưu phiên mua sắm của khách (id_giohang, id_khachhang).
+
+GIO_HANG_ITEM (Sản phẩm trong giỏ): Chi tiết các cuốn sách khách đã chọn vào giỏ hàng trước khi thanh toán (id_sach, so_luong).
+
+3. Nhóm Quản lý Đơn hàng (Sales Processing)
+DON_HANG (Đơn hàng): Ghi lại lịch sử mua hàng.
+
+id_donhang: Mã đơn hàng.
+
+ngay_dat: Thời điểm chốt đơn.
+
+trang_thai_dh: Trạng thái (Ví dụ: Đang xử lý, Đang giao, Đã hoàn thành, Đã hủy).
+
+tong_tien: Tổng giá trị hóa đơn.a
+
+id_httt: Khóa ngoại liên kết với phương thức thanh toán.
+
+CHI_TIET_DON_HANG (Chi tiết đơn hàng): Lưu danh sách sách cụ thể trong một đơn hàng. Điều quan trọng ở đây là lưu lại gia_ban tại thời điểm mua (vì giá sách có thể thay đổi trong tương lai, nhưng đơn hàng cũ phải giữ nguyên giá gốc).
+
+4. Nhóm Hỗ trợ & Cấu hình
+HINH_THUC_THANH_TOAN (Phương thức thanh toán): Định nghĩa cách thanh toán (id_httt, ten_httt). Ví dụ: COD (trả tiền mặt khi nhận hàng), Ví điện tử, Chuyển khoản ngân hàng.
+
+Một vài lưu ý về kỹ thuật trong sơ đồ:
+PK (Primary Key - Khóa chính): Là giá trị duy nhất đại diện cho một dòng dữ liệu (ví dụ: id_sach không bao giờ trùng với sách khác).
+
+FK (Foreign Key - Khóa ngoại): Là cầu nối để các bảng "nói chuyện" với nhau. Ví dụ, trong bảng SACH, id_tacgia trỏ đến id_tacgia trong bảng TAC_GIA để biết cuốn sách này là của ai.
+
+Mối quan hệ 1-N (Một - Nhiều): Ví dụ, một DANH_MUC có thể chứa nhiều SACH (1 danh mục -> nhiều sách), nhưng một SACH chỉ thuộc về 1 DANH_MUC (tại một thời điểm cụ thể).
