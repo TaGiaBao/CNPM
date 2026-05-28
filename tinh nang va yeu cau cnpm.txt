@@ -1,0 +1,30 @@
+1. Tính năng dành cho Khách hàng (Frontend / Customer)
+Đây là các tính năng tương tác trực tiếp với người mua, đòi hỏi thiết kế giao diện (UI) thân thiện và điều hướng mượt mà:
+
+Trang chủ (Homepage): Hiển thị banner khuyến mãi, sách bán chạy, sách mới xuất bản, và các danh mục sách nổi bật. Có thể sử dụng cấu trúc Mega Menu để phân chia rõ ràng các thể loại sách.
+
+Tìm kiếm và Lọc (Search & Filter): Chức năng tìm kiếm nâng cao là bắt buộc đối với web sách. Người dùng cần có thể tìm và lọc theo: Tên sách, Tác giả, Nhà xuất bản, Thể loại, Dải giá, hoặc mã ISBN.
+
+Chi tiết sản phẩm (Product Details): Hiển thị ảnh bìa, tóm tắt nội dung, thông tin tác giả, giá bán, tình trạng kho, và phần đánh giá/bình luận (Review/Rating) từ người đọc khác.
+
+Giỏ hàng và Thanh toán (Cart & Checkout): Thêm/bớt số lượng sách, tự động tính tổng tiền, phí ship. Hỗ trợ nhiều phương thức thanh toán (COD, thẻ ngân hàng, ví điện tử).
+
+Quản lý tài khoản: Đăng ký/Đăng nhập, xem lịch sử mua hàng, theo dõi trạng thái đơn hàng, và tạo danh sách yêu thích (Wishlist).
+
+2. Tính năng dành cho Quản trị viên (Backend / Admin Dashboard)
+Đây là hệ thống quản lý (CMS) dùng để vận hành website, thường yêu cầu kết nối cơ sở dữ liệu chặt chẽ và kiến trúc phân lớp rõ ràng:
+
+Quản lý kho sách (Inventory Management): Thực hiện các thao tác CRUD (Thêm, Đọc, Sửa, Xóa) cho sách. Quản lý số lượng tồn kho và cập nhật giá cả.
+
+Quản lý Đơn hàng (Order Management): Theo dõi và thay đổi trạng thái đơn hàng (Chờ xác nhận, Đang giao, Hoàn thành, Hủy), xử lý hoàn tiền nếu có.
+
+Quản lý Người dùng (User Management): Quản lý thông tin khách hàng, phân quyền tài khoản (Admin, Staff, User).
+
+Báo cáo và Thống kê (Analytics): Bảng điều khiển (Dashboard) hiển thị doanh thu theo ngày/tháng, top sách bán chạy nhất, và tỷ lệ chuyển đổi.
+
+3. Yêu cầu Phi chức năng (Non-functional Requirements)
+Thiết kế Tương thích (Responsive Design): Giao diện phải hiển thị tốt trên cả Desktop, Tablet và Mobile.
+
+Hiệu suất (Performance): Tốc độ tải trang nhanh, xử lý mượt mà khi có nhiều lượt truy cập cùng lúc hoặc khi tải ảnh bìa sách độ phân giải cao.
+
+Bảo mật (Security): Mã hóa mật khẩu người dùng, bảo mật thông tin thanh toán và phòng chống các lỗ hổng web cơ bản (SQL Injection, XSS).
