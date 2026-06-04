@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Export & Handoff Portal - Vũ Tùng Dương</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-[#0F172A] text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 bg-[#1E293B] sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/20">
+                F
+            </div>
+            <div>
+                <h1 class="text-base font-bold tracking-tight text-white flex items-center space-x-2">
+                    <span>Figma Handoff & Export Portal</span>
+                    <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Sprint 2</span>
+                </h1>
+                <p class="text-xs text-slate-400">Thành viên thực hiện: <span class="text-blue-400 font-semibold">Vũ Tùng Dương</span> (UI/UX Designer)</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="text-xs text-slate-400 hidden sm:inline-block">Dự án: Hệ thống quản lý & bán sách trực tuyến</span>
+            <span class="h-4 w-px bg-slate-700 hidden sm:inline-block"></span>
+            <div class="bg-slate-800 text-xs text-slate-300 px-3 py-1.5 rounded-md border border-slate-700">
+                Status: Ready for Handoff
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Export Controls & Preview (7 Columns) -->
+        <section class="lg:col-span-7 flex flex-col space-y-6">
+            <div class="bg-[#1E293B] rounded-xl border border-slate-800 p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 pb-6 border-b border-slate-800 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i data-lucide="image-down" class="text-blue-500 w-5 h-5"></i>
+                            Bộ Mockup Giỏ hàng & Checkout (2x Resolution)
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Xuất trực tiếp các Artboard thiết kế của Vũ Tùng Dương thành ảnh PNG sắc nét.</p>
+                    </div>
+                    <button onclick="exportAllMockups()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition shadow-lg shadow-blue-600/20 w-full sm:w-auto">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        Tải Toàn Bộ Ảnh (Batch Export)
+                    </button>
+                </div>
+
+                <!-- Export Progress Bar (Hidden by default) -->
+                <div id="export-progress-container" class="hidden mb-6 p-4 bg-slate-900/50 rounded-lg border border-slate-800">
+                    <div class="flex justify-between text-xs font-semibold text-slate-300 mb-2">
+                        <span class="flex items-center gap-2">
+                            <svg class="animate-spin h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Đang xử lý xuất bản 2x High-Res PNG...
+                        </span>
+                        <span id="export-progress-text">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2">
+                        <div id="export-progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Screen 1: Giỏ hàng -->
+                    <div class="bg-slate-900/60 rounded-lg border border-slate-800 overflow-hidden group">
+                        <div class="aspect-video relative bg-slate-950 flex items-center justify-center overflow-hidden">
+                            <canvas id="canvas-cart" class="w-full h-full object-cover"></canvas>
+                            <div class="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center gap-3">
+                                <button onclick="downloadSingle('canvas-cart', '01_Giỏ_Hàng_Chính_Thức.png')" class="bg-blue-600 hover:bg-blue-500 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Tải ảnh PNG">
+                                    <i data-lucide="download" class="w-5 h-5"></i>
+                                </button>
+                                <button onclick="previewMockup('canvas-cart')" class="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Xem phóng to">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-3 border-t border-slate-800 flex justify-between items-center bg-slate-900/90">
+                            <div>
+                                <h3 class="text-xs font-semibold text-white">01_Giỏ_Hàng_Chính_Thức.png</h3>
+                                <p class="text-[10px] text-slate-400 mt-0.5">1920x1080 • Desktop Standard</p>
+                            </div>
+                            <span class="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded">Cart</span>
+                        </div>
+                    </div>
+
+                    <!-- Screen 2: Giỏ hàng trống -->
+                    <div class="bg-slate-900/60 rounded-lg border border-slate-800 overflow-hidden group">
+                        <div class="aspect-video relative bg-slate-950 flex items-center justify-center overflow-hidden">
+                            <canvas id="canvas-empty" class="w-full h-full object-cover"></canvas>
+                            <div class="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center gap-3">
+                                <button onclick="downloadSingle('canvas-empty', '02_Giỏ_Hàng_Trống_UX.png')" class="bg-blue-600 hover:bg-blue-500 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Tải ảnh PNG">
+                                    <i data-lucide="download" class="w-5 h-5"></i>
+                                </button>
+                                <button onclick="previewMockup('canvas-empty')" class="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Xem phóng to">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-3 border-t border-slate-800 flex justify-between items-center bg-slate-900/90">
+                            <div>
+                                <h3 class="text-xs font-semibold text-white">02_Giỏ_Hàng_Trống_UX.png</h3>
+                                <p class="text-[10px] text-slate-400 mt-0.5">1920x1080 • Empty State</p>
+                            </div>
+                            <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded">UX Case</span>
+                        </div>
+                    </div>
+
+                    <!-- Screen 3: Form đặt hàng -->
+                    <div class="bg-slate-900/60 rounded-lg border border-slate-800 overflow-hidden group">
+                        <div class="aspect-video relative bg-slate-950 flex items-center justify-center overflow-hidden">
+                            <canvas id="canvas-checkout" class="w-full h-full object-cover"></canvas>
+                            <div class="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center gap-3">
+                                <button onclick="downloadSingle('canvas-checkout', '03_Form_Thanh_Toán.png')" class="bg-blue-600 hover:bg-blue-500 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Tải ảnh PNG">
+                                    <i data-lucide="download" class="w-5 h-5"></i>
+                                </button>
+                                <button onclick="previewMockup('canvas-checkout')" class="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Xem phóng to">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-3 border-t border-slate-800 flex justify-between items-center bg-slate-900/90">
+                            <div>
+                                <h3 class="text-xs font-semibold text-white">03_Form_Thanh_Toán.png</h3>
+                                <p class="text-[10px] text-slate-400 mt-0.5">1920x1080 • Checkout Form</p>
+                            </div>
+                            <span class="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded">Form</span>
+                        </div>
+                    </div>
+
+                    <!-- Screen 4: Bắt lỗi Validation -->
+                    <div class="bg-slate-900/60 rounded-lg border border-slate-800 overflow-hidden group">
+                        <div class="aspect-video relative bg-slate-950 flex items-center justify-center overflow-hidden">
+                            <canvas id="canvas-validation" class="w-full h-full object-cover"></canvas>
+                            <div class="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center gap-3">
+                                <button onclick="downloadSingle('canvas-validation', '04_Form_Cảnh_Báo_Lỗi.png')" class="bg-blue-600 hover:bg-blue-500 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Tải ảnh PNG">
+                                    <i data-lucide="download" class="w-5 h-5"></i>
+                                </button>
+                                <button onclick="previewMockup('canvas-validation')" class="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Xem phóng to">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-3 border-t border-slate-800 flex justify-between items-center bg-slate-900/90">
+                            <div>
+                                <h3 class="text-xs font-semibold text-white">04_Form_Cảnh_Báo_Lỗi.png</h3>
+                                <p class="text-[10px] text-slate-400 mt-0.5">1920x1080 • Form Validation</p>
+                            </div>
+                            <span class="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-1.5 py-0.5 rounded">Error Case</span>
+                        </div>
+                    </div>
+
+                    <!-- Screen 5: Đặt hàng thành công -->
+                    <div class="bg-slate-900/60 rounded-lg border border-slate-800 overflow-hidden group">
+                        <div class="aspect-video relative bg-slate-950 flex items-center justify-center overflow-hidden">
+                            <canvas id="canvas-success" class="w-full h-full object-cover"></canvas>
+                            <div class="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center gap-3">
+                                <button onclick="downloadSingle('canvas-success', '05_Xác_Nhận_Thành_Công.png')" class="bg-blue-600 hover:bg-blue-500 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Tải ảnh PNG">
+                                    <i data-lucide="download" class="w-5 h-5"></i>
+                                </button>
+                                <button onclick="previewMockup('canvas-success')" class="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-full text-white transition transform hover:scale-110" title="Xem phóng to">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-3 border-t border-slate-800 flex justify-between items-center bg-slate-900/90">
+                            <div>
+                                <h3 class="text-xs font-semibold text-white">05_Xác_Nhận_Thành_Công.png</h3>
+                                <p class="text-[10px] text-slate-400 mt-0.5">1920x1080 • Success State</p>
+                            </div>
+                            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Success</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Figma Link & Joint Report Copy Panel (5 Columns) -->
+        <section class="lg:col-span-5 flex flex-col space-y-6">
+            <!-- Link Figma Section -->
+            <div class="bg-[#1E293B] rounded-xl border border-slate-800 p-6 shadow-xl">
+                <h2 class="text-base font-bold text-white flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-purple-400" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 0C8.5 0 0 8.5 0 19C0 24.8 2.9 29.9 7.3 33.1C2.9 36.3 0 41.4 0 47.2C0 57.7 8.5 66.2 19 66.2C29.5 66.2 38 57.7 38 47.2C38 41.4 35.1 36.3 30.7 33.1C35.1 29.9 38 24.8 38 19C38 8.5 29.5 0 19 0Z" fill="url(#paint0_linear)"/>
+                        <path d="M9.5 19C9.5 13.8 13.8 9.5 19 9.5C24.2 9.5 28.5 13.8 28.5 19C28.5 24.2 24.2 28.5 19 28.5C13.8 28.5 9.5 24.2 9.5 19Z" fill="#F24E1E"/>
+                        <path d="M9.5 47.2C9.5 42 13.8 37.7 19 37.7C24.2 37.7 28.5 42 28.5 47.2C28.5 52.4 24.2 56.7 19 56.7C13.8 56.7 9.5 52.4 9.5 47.2Z" fill="#1ABC9C"/>
+                        <path d="M19 28.5C24.2 28.5 28.5 32.8 28.5 38C28.5 43.2 24.2 47.5 19 47.5C13.8 47.5 9.5 43.2 9.5 38C9.5 32.8 13.8 28.5 19 28.5Z" fill="#0ACF83"/>
+                        <path d="M19 9.5V28.5C24.2 28.5 28.5 24.2 28.5 19C28.5 13.8 24.2 9.5 19 9.5Z" fill="#FF7262"/>
+                        <path d="M19 28.5V47.5C24.2 47.5 28.5 43.2 28.5 38C28.5 32.8 24.2 28.5 19 28.5Z" fill="#A259FF"/>
+                        <defs>
+                            <linearGradient id="paint0_linear" x1="19" y1="0" x2="19" y2="66.2" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#FF7262"/>
+                                <stop offset="1" stop-color="#A259FF"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    Figma Public Project Link
+                </h2>
+                <p class="text-xs text-slate-400 mb-4">Chia sẻ trực tiếp cho bộ phận kỹ thuật để xem chi tiết thông số CSS và Sơ đồ luồng.</p>
+                
+                <div class="flex items-center space-x-2 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 text-xs text-slate-300">
+                    <span class="truncate select-all text-blue-400 flex-grow code-font">https://www.figma.com/file/bookstore-sprint2-vutunduong-handsoff</span>
+                    <button onclick="copyToClipboard('https://www.figma.com/file/bookstore-sprint2-vutunduong-handsoff', 'Link Figma')" class="bg-slate-800 hover:bg-slate-700 text-white p-1.5 rounded transition">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Report Generator Panel -->
+            <div class="bg-[#1E293B] rounded-xl border border-slate-800 p-6 shadow-xl flex flex-col flex-grow">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="file-text" class="text-emerald-500 w-5 h-5"></i>
+                        Báo cáo Tiến độ Chung (Markdown)
+                    </h2>
+                    <button onclick="copyReport()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+                        <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
+                        Sao Chép Báo Cáo
+                    </button>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">Mẫu báo cáo đạt chuẩn quy trình vận hành doanh nghiệp. Đã tích hợp sẵn link Figma và mô tả phân hệ để dán thẳng vào file báo cáo chung của nhóm.</p>
+
+                <!-- Copy Area -->
+                <textarea id="markdown-report" class="flex-grow w-full h-[380px] bg-slate-900 border border-slate-800 rounded-lg p-4 text-xs code-font text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 resize-none">### 📋 BÁO CÁO TIẾN ĐỘ SPRINT 2 (01/06 - 05/06)
+**Phân hệ:** Giỏ hàng, Đặt hàng & Xác nhận Thành công (Bookstore System)
+**Người phụ trách:** Vũ Tùng Dương (UI/UX Designer)
+
+---
+
+#### 1. THÔNG TIN KHÔNG GIAN THIẾT KẾ (HANDOFF RESOURCES)
+* **Figma Project Link (Public):** https://www.figma.com/file/bookstore-sprint2-vutunduong-handsoff
+* **Chế độ xem Prototype (Clickable):** https://www.figma.com/proto/bookstore-sprint2-vutunduong-handsoff?node-id=cart-main
+* **Danh sách Artboards đã hoàn tất:**
+    1.  `01_Giỏ_Hàng_Chính_Thức.png` - Màn hình Giỏ hàng chính, quản lý tăng giảm số lượng sản phẩm, voucher giảm giá.
+    2.  `02_Giỏ_Hàng_Trống_UX.png` - Trạng thái Empty State hỗ trợ định hướng mua hàng tiếp tục.
+    3.  `03_Form_Thanh_Toán.png` - Form nhập thông tin nhận hàng, tùy chọn thanh toán COD/VNPay QR.
+    4.  `04_Form_Cảnh_Báo_Lỗi.png` - Trạng thái Validation kiểm soát lỗi nhập liệu thời gian thực.
+    5.  `05_Xác_Nhận_Thành_Công.png` - Trạng thái thành công, tích hợp hành trình giao sách (4 bước) & hóa đơn hóa trị giá.
+
+---
+
+#### 2. KẾT QUẢ ĐẠT ĐƯỢC (DELIVERABLES & UX DECISIONS)
+* **Grid System:** Đồng bộ hóa hệ lưới 12-Column Grid (Margin 120px, Gutter 24px) đảm bảo tỷ lệ tương thích tuyệt đối cho lập trình viên Front-end (Nguyễn Thái Hà, Tạ Gia Bảo).
+* **UX Tối ưu hóa chuyển đổi (Conversion Rate):** * *Fitts's Law:* Thiết kế khoảng cách chạm và CTA (Primary Button) kích thước lớn vừa vặn, màu tương phản tối đa.
+    * *Error Prevention:* Sử dụng cảnh báo màu đỏ Semantic `#EF4444` và có text chú thích ngay phía dưới input bị lỗi giúp người dùng sửa lỗi tức thì.
+    * *Hick's Law:* Tối giản hóa các trường thông tin không cần thiết trên biểu mẫu thanh toán giúp giảm thiểu sự trì hoãn quyết định mua.
+
+---
+
+#### 3. BÀN GIAO KỸ THUẬT (DEVELOPMENT NOTE)
+* *Gửi Xuân Biển & Tuấn Dũng:* Các icon sử dụng thuộc hệ thư viện Lucide/SVG. Đã thiết lập các biến Color Palette chuẩn trong Figma Variables (Primary: `#1D4ED8`, Error: `#EF4444`, Text: `#0F172A`).
+* *Trạng thái liên kết:* Toàn bộ Prototype được nối mạch logic hoàn chỉnh. Hãy xem chi tiết tại sơ đồ liên kết (Figma Interactive Wires) để nắm luồng xử lý trước khi code.</textarea>
+            </div>
+        </section>
+    </main>
+
+    <!-- Fullscreen Mockup Image Preview Modal -->
+    <div id="preview-modal" class="fixed inset-0 bg-slate-950/90 z-50 flex flex-col items-center justify-center p-4 hidden">
+        <button onclick="closePreview()" class="absolute top-6 right-6 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-full transition">
+            <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+        <div class="max-w-4xl w-full flex items-center justify-center">
+            <img id="modal-img-preview" src="" alt="Mockup Preview" class="max-h-[80vh] object-contain rounded-lg shadow-2xl border border-slate-800">
+        </div>
+        <div class="mt-4 text-center">
+            <h3 id="modal-img-title" class="text-sm font-bold text-white"></h3>
+            <p id="modal-img-desc" class="text-xs text-slate-400 mt-1">Sử dụng thanh scroll để xem chi tiết tỷ lệ 100%.</p>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2"></div>
+
+    <!-- Hidden Canvas Setup & Drawing Engine -->
+    <script>
+        // High-Resolution Drawing Logic to simulate Figma artboard render
+        window.onload = function() {
+            lucide.createIcons();
+            drawAllMockups();
+        };
+
+        function drawAllMockups() {
+            drawCartScreen();
+            drawEmptyScreen();
+            drawCheckoutScreen();
+            drawValidationErrorScreen();
+            drawSuccessScreen();
+        }
+
+        // Helper: Standard Canvas Theme Setup (1920x1080)
+        function initCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            canvas.width = 1920;
+            canvas.height = 1080;
+            const ctx = canvas.getContext('2d');
+            
+            // Dark Slate Theme Background
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(0, 0, 1920, 1080);
+            
+            return { canvas, ctx };
+        }
+
+        // Drawer: Header & Shell Component
+        function drawMockupHeader(ctx, titleText) {
+            // Topbar
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(0, 0, 1920, 100);
+            
+            // Logo
+            ctx.fillStyle = '#1D4ED8';
+            ctx.beginPath();
+            ctx.arc(100, 50, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 24px Inter';
+            ctx.fillText('B', 92, 58);
+            
+            ctx.font = 'bold 22px Inter';
+            ctx.fillText('BOOKSTORE', 140, 58);
+
+            // Active Menu Tab Indicator
+            ctx.fillStyle = '#E2E8F0';
+            ctx.font = '500 18px Inter';
+            ctx.fillText('Trang Chủ', 350, 58);
+            ctx.fillText('Danh Mục', 480, 58);
+            ctx.fillText('Khuyến Mãi', 610, 58);
+            
+            // Search Input Block
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(800, 30, 400, 40);
+            ctx.strokeStyle = '#334155';
+            ctx.strokeRect(800, 30, 400, 40);
+            ctx.fillStyle = '#64748B';
+            ctx.font = '14px Inter';
+            ctx.fillText('Tìm kiếm tên sách, tác giả...', 820, 55);
+
+            // Cart Icon on Header
+            ctx.fillStyle = '#1D4ED8';
+            ctx.fillRect(1700, 25, 120, 50);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Inter';
+            ctx.fillText('Giỏ hàng (3)', 1715, 55);
+
+            // Page Title
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 36px Inter';
+            ctx.fillText(titleText, 100, 180);
+
+            ctx.strokeStyle = '#1E293B';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(100, 220);
+            ctx.lineTo(1820, 220);
+            ctx.stroke();
+        }
+
+        // Draw 01: Cart Screen
+        function drawCartScreen() {
+            const { ctx } = initCanvas('canvas-cart');
+            drawMockupHeader(ctx, 'Giỏ Hàng Của Bạn');
+
+            // Left Panel: Items List (Col-span 8)
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(100, 260, 1100, 700);
+
+            // Header of Table
+            ctx.fillStyle = '#64748B';
+            ctx.font = 'bold 16px Inter';
+            ctx.fillText('SẢN PHẨM SÁCH', 140, 310);
+            ctx.fillText('ĐƠN GIÁ', 650, 310);
+            ctx.fillText('SỐ LƯỢNG', 820, 310);
+            ctx.fillText('TẠM TÍNH', 1020, 310);
+
+            // Book row item helper
+            function drawBookRow(y, title, author, price, qty, total) {
+                // Image box placeholder
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(140, y, 70, 100);
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(145, y + 5, 60, 90);
+                
+                // Book info
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 18px Inter';
+                ctx.fillText(title, 230, y + 40);
+                ctx.fillStyle = '#94A3B8';
+                ctx.font = '14px Inter';
+                ctx.fillText('Tác giả: ' + author, 230, y + 70);
+
+                // Price, Qty, Total
+                ctx.fillStyle = '#F1F5F9';
+                ctx.font = '600 18px Inter';
+                ctx.fillText(price, 650, y + 55);
+                
+                // Stepper Qty Box
+                ctx.strokeStyle = '#475569';
+                ctx.strokeRect(820, y + 35, 120, 40);
+                ctx.fillStyle = '#94A3B8';
+                ctx.fillText('-', 840, y + 60);
+                ctx.fillText('+', 910, y + 60);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillText(qty, 875, y + 60);
+
+                ctx.fillStyle = '#10B981'; // Green color for subtotal
+                ctx.fillText(total, 1020, y + 55);
+
+                // Divider line
+                ctx.strokeStyle = '#334155';
+                ctx.beginPath();
+                ctx.moveTo(140, y + 130);
+                ctx.lineTo(1160, y + 130);
+                ctx.stroke();
+            }
+
+            drawBookRow(360, 'Kỹ Nghệ Thiết Kế UX/UI Chuyên Nghiệp', 'Vũ Tùng Dương', '180,000đ', '2', '360,000đ');
+            drawBookRow(520, 'Tư Duy Thiết Kế Heuristic trong E-Commerce', 'Bảo & Hà', '125,000đ', '1', '125,000đ');
+            drawBookRow(680, 'Sơ Đồ Kiến Trúc Phần Mềm Doanh Nghiệp', 'Lại Xuân Biển', '210,000đ', '1', '210,000đ');
+
+            // Right Panel: Order Summary (Col-span 4)
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(1260, 260, 560, 460);
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 22px Inter';
+            ctx.fillText('Tóm tắt đơn hàng', 1300, 315);
+
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '16px Inter';
+            ctx.fillText('Tạm tính:', 1300, 380);
+            ctx.fillText('Phí vận chuyển:', 1300, 430);
+            ctx.fillText('Mã ưu đãi (VOUCHER):', 1300, 480);
+
+            ctx.fillStyle = '#F1F5F9';
+            ctx.fillText('695,000đ', 1680, 380);
+            ctx.fillText('Miễn phí', 1680, 430);
+            ctx.fillStyle = '#EF4444';
+            ctx.fillText('-35,000đ', 1680, 480);
+
+            // Divider Line
+            ctx.strokeStyle = '#334155';
+            ctx.beginPath();
+            ctx.moveTo(1300, 520);
+            ctx.lineTo(1780, 520);
+            ctx.stroke();
+
+            // Total Price Section
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 20px Inter';
+            ctx.fillText('TỔNG CỘNG FINAL:', 1300, 570);
+            ctx.fillStyle = '#10B981';
+            ctx.font = 'bold 28px Inter';
+            ctx.fillText('660,000đ', 1630, 575);
+
+            // Checkout CTA Button
+            ctx.fillStyle = '#1D4ED8';
+            ctx.fillRect(1300, 620, 480, 60);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 18px Inter';
+            ctx.fillText('TIẾN HÀNH THANH TOÁN', 1420, 657);
+        }
+
+        // Draw 02: Empty Screen
+        function drawEmptyScreen() {
+            const { ctx } = initCanvas('canvas-empty');
+            drawMockupHeader(ctx, 'Giỏ Hàng Của Bạn');
+
+            // Inner Canvas Card Container
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(100, 260, 1720, 700);
+
+            // Empty cart graphic using shapes
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(960, 480, 80, 0, Math.PI, true); // Handle
+            ctx.stroke();
+
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.roundRect(840, 480, 240, 180, 15); // Basket Body
+            ctx.fill();
+
+            // Dash lines decoration on basket
+            ctx.strokeStyle = '#64748B';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(880, 500); ctx.lineTo(880, 640);
+            ctx.moveTo(960, 500); ctx.lineTo(960, 640);
+            ctx.moveTo(1040, 500); ctx.lineTo(1040, 640);
+            ctx.stroke();
+
+            // Badges or alerts on basket
+            ctx.fillStyle = '#EF4444';
+            ctx.beginPath();
+            ctx.arc(960, 570, 25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 26px Inter';
+            ctx.fillText('0', 952, 579);
+
+            // Status message
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 28px Inter';
+            ctx.fillText('Giỏ hàng của bạn đang trống!', 765, 730);
+
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '16px Inter';
+            ctx.fillText('Có vẻ như bạn chưa thêm bất kỳ sản phẩm nào. Hãy khám phá hàng ngàn tựa sách mới nhất.', 610, 770);
+
+            // Action button to home
+            ctx.fillStyle = '#1D4ED8';
+            ctx.beginPath();
+            ctx.roundRect(830, 810, 260, 55, 10);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Inter';
+            ctx.fillText('Tiếp Tục Mua Sắm', 885, 843);
+        }
+
+        // Draw 03: Checkout Form Screen
+        function drawCheckoutScreen() {
+            const { ctx } = initCanvas('canvas-checkout');
+            drawMockupHeader(ctx, 'Thanh Toán & Đặt Hàng');
+
+            // Left panel: Billing & shipping form
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(100, 260, 1100, 700);
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 22px Inter';
+            ctx.fillText('Thông tin giao hàng', 140, 315);
+
+            // Helper for drawing form fields
+            function drawField(x, y, w, label, val) {
+                ctx.fillStyle = '#94A3B8';
+                ctx.font = '14px Inter';
+                ctx.fillText(label, x, y);
+
+                ctx.fillStyle = '#0F172A';
+                ctx.fillRect(x, y + 15, w, 50);
+                ctx.strokeStyle = '#334155';
+                ctx.strokeRect(x, y + 15, w, 50);
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '15px Inter';
+                ctx.fillText(val, x + 15, y + 45);
+            }
+
+            drawField(140, 380, 430, 'Họ tên người nhận *', 'Vũ Tùng Dương');
+            drawField(610, 380, 430, 'Số điện thoại liên hệ *', '0987 654 321');
+            
+            drawField(140, 480, 430, 'Tỉnh / Thành phố *', 'Thành phố Hà Nội');
+            drawField(610, 480, 430, 'Quận / Huyện *', 'Cầu Giấy');
+
+            drawField(140, 580, 900, 'Địa chỉ chi tiết (Số nhà, đường...) *', 'Số 26, Ngõ 144 Quan Hoa');
+            drawField(140, 680, 900, 'Ghi chú cho shipper', 'Giao giờ hành chính, gọi điện trước khi giao.');
+
+            // Payment Methods Block
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 20px Inter';
+            ctx.fillText('Phương thức thanh toán', 140, 810);
+
+            // COD Option Box (Selected)
+            ctx.fillStyle = '#1E293B';
+            ctx.strokeStyle = '#1D4ED8';
+            ctx.strokeRect(140, 840, 430, 80);
+            ctx.fillStyle = '#1D4ED8';
+            ctx.beginPath();
+            ctx.arc(170, 880, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Inter';
+            ctx.fillText('Thanh toán COD khi nhận hàng', 200, 885);
+
+            // VNPay Option Box
+            ctx.strokeStyle = '#334155';
+            ctx.strokeRect(610, 840, 430, 80);
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.arc(640, 880, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillText('Cổng thanh toán VNPay (Giảm 10%)', 670, 885);
+
+            // Right Panel: Sticky Cart Review
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(1260, 260, 560, 460);
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 22px Inter';
+            ctx.fillText('Kiểm tra đơn hàng (3 món)', 1300, 315);
+
+            ctx.strokeStyle = '#334155';
+            ctx.beginPath();
+            ctx.moveTo(1300, 350); ctx.lineTo(1780, 350);
+            ctx.stroke();
+
+            // Simplified Item list
+            ctx.font = '15px Inter';
+            ctx.fillStyle = '#F1F5F9';
+            ctx.fillText('Kỹ Nghệ Thiết Kế UX/UI Chuyên Nghiệp x2', 1300, 400);
+            ctx.fillText('Tư Duy Thiết Kế Heuristic trong E-Commerce x1', 1300, 440);
+            ctx.fillText('Sơ Đồ Kiến Trúc Phần Mềm Doanh Nghiệp x1', 1300, 480);
+
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillText('Tổng tiền hàng:', 1300, 540);
+            ctx.fillText('Giảm giá coupon:', 1300, 580);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText('695,000đ', 1680, 540);
+            ctx.fillStyle = '#EF4444';
+            ctx.fillText('-35,000đ', 1680, 580);
+
+            // CTA Place Order
+            ctx.fillStyle = '#1D4ED8';
+            ctx.fillRect(1300, 630, 480, 60);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 18px Inter';
+            ctx.fillText('XÁC NHẬN ĐẶT HÀNG', 1435, 667);
+        }
+
+        // Draw 04: Validation Error Screen
+        function drawValidationErrorScreen() {
+            const { ctx } = initCanvas('canvas-validation');
+            drawMockupHeader(ctx, 'Thanh Toán & Đặt Hàng');
+
+            // Left panel with validation error indicators
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(100, 260, 1100, 700);
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 22px Inter';
+            ctx.fillText('Thông tin giao hàng', 140, 315);
+
+            // Form helper with error
+            function drawFieldError(x, y, w, label, val, errMsg) {
+                ctx.fillStyle = '#94A3B8';
+                ctx.font = '14px Inter';
+                ctx.fillText(label, x, y);
+
+                ctx.fillStyle = '#0F172A';
+                ctx.fillRect(x, y + 15, w, 50);
+                
+                if (errMsg) {
+                    ctx.strokeStyle = '#EF4444'; // Red Border for error
+                    ctx.lineWidth = 2;
+                } else {
+                    ctx.strokeStyle = '#334155';
+                    ctx.lineWidth = 1;
+                }
+                ctx.strokeRect(x, y + 15, w, 50);
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '15px Inter';
+                ctx.fillText(val, x + 15, y + 45);
+
+                if (errMsg) {
+                    ctx.fillStyle = '#EF4444';
+                    ctx.font = '12px Inter';
+                    ctx.fillText('⚠️ ' + errMsg, x, y + 80);
+                }
+            }
+
+            drawFieldError(140, 380, 430, 'Họ tên người nhận *', 'Vũ Tùng Dương');
+            // Empty / Error telephone input
+            drawFieldError(610, 380, 430, 'Số điện thoại liên hệ *', '', 'Số điện thoại bắt buộc không được bỏ trống!');
+            
+            drawFieldError(140, 490, 430, 'Tỉnh / Thành phố *', 'Thành phố Hà Nội');
+            drawFieldError(610, 490, 430, 'Quận / Huyện *', 'Cầu Giấy');
+
+            // Invalid address detailed input
+            drawFieldError(140, 600, 900, 'Địa chỉ chi tiết (Số nhà, đường...) *', 'Hà Nội', 'Vui lòng cung cấp địa chỉ số nhà và tên đường chi tiết!');
+
+            // Right Panel (Summary details remain stable)
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(1260, 260, 560, 460);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 22px Inter';
+            ctx.fillText('Kiểm tra đơn hàng (3 món)', 1300, 315);
+
+            ctx.fillStyle = '#EF4444';
+            ctx.fillRect(1300, 630, 480, 60);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 18px Inter';
+            ctx.fillText('SỬA LỖI ĐỂ HOÀN TẤT', 1435, 667);
+        }
+
+        // Draw 05: Success Screen
+        function drawSuccessScreen() {
+            const { ctx } = initCanvas('canvas-success');
+            drawMockupHeader(ctx, 'Đặt Hàng Thành Công');
+
+            // Background Card
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(100, 260, 1720, 700);
+
+            // Success circle banner
+            ctx.fillStyle = '#10B981';
+            ctx.beginPath();
+            ctx.arc(960, 400, 60, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Checkmark SVG representation inside circle
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(930, 400);
+            ctx.lineTo(952, 422);
+            ctx.lineTo(995, 375);
+            ctx.stroke();
+
+            // Title Header
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 32px Inter';
+            ctx.fillText('Đặt hàng thành công!', 790, 520);
+
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '16px Inter';
+            ctx.fillText('Cảm ơn bạn đã mua sắm tại Bookstore. Đơn hàng của bạn đang được điều phối vận hành.', 620, 560);
+            
+            ctx.fillStyle = '#38BDF8';
+            ctx.font = 'bold 18px Inter';
+            ctx.fillText('Mã giao dịch tham chiếu: #BOOK-2026-0605A', 750, 610);
+
+            // Stepper timeline tracking status (4-steps)
+            function drawTimelineStep(x, label, status) {
+                // Node Circle
+                ctx.fillStyle = status === 'active' ? '#10B981' : '#475569';
+                ctx.beginPath();
+                ctx.arc(x, 690, 18, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (status === 'active') {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 14px Inter';
+                    ctx.fillText('✓', x - 5, 695);
+                }
+
+                // Node text
+                ctx.fillStyle = status === 'active' ? '#FFFFFF' : '#64748B';
+                ctx.font = 'bold 14px Inter';
+                ctx.fillText(label, x - 50, 735);
+            }
+
+            // Connector lines
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(600, 690); ctx.lineTo(1320, 690); ctx.stroke();
+
+            ctx.strokeStyle = '#10B981';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(600, 690); ctx.lineTo(840, 690); ctx.stroke();
+
+            drawTimelineStep(600, 'Đã Tiếp Nhận', 'active');
+            drawTimelineStep(840, 'Đang Xử Lý', 'active');
+            drawTimelineStep(1080, 'Đang Giao Hàng', 'pending');
+            drawTimelineStep(1320, 'Giao Thành Công', 'pending');
+
+            // Navigation Button controls
+            ctx.fillStyle = '#1D4ED8';
+            ctx.beginPath();
+            ctx.roundRect(650, 810, 280, 55, 10);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Inter';
+            ctx.fillText('Theo dõi vận chuyển', 710, 843);
+
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(990, 810, 280, 55, 10);
+            ctx.stroke();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Inter';
+            ctx.fillText('Quay lại trang chủ', 1060, 843);
+        }
+
+        // Export All Canvas as PNG Images
+        function exportAllMockups() {
+            const container = document.getElementById('export-progress-container');
+            const progressText = document.getElementById('export-progress-text');
+            const progressBar = document.getElementById('export-progress-bar');
+            
+            container.classList.remove('hidden');
+            let progress = 0;
+
+            const targets = [
+                { id: 'canvas-cart', name: '01_Giỏ_Hàng_Chính_Thức.png' },
+                { id: 'canvas-empty', name: '02_Giỏ_Hàng_Trống_UX.png' },
+                { id: 'canvas-checkout', name: '03_Form_Thanh_Toán.png' },
+                { id: 'canvas-validation', name: '04_Form_Cảnh_Báo_Lỗi.png' },
+                { id: 'canvas-success', name: '05_Xác_Nhận_Thành_Công.png' }
+            ];
+
+            const interval = setInterval(() => {
+                progress += 20;
+                progressBar.style.width = progress + '%';
+                progressText.innerText = progress + '%';
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        targets.forEach(item => {
+                            const canvas = document.getElementById(item.id);
+                            const url = canvas.toDataURL('image/png');
+                            const link = document.createElement('a');
+                            link.download = item.name;
+                            link.href = url;
+                            link.click();
+                        });
+                        showToast('✓ Xuất bản loạt (Batch Export) thành công! Đã tải 5 file PNG về máy.', 'success');
+                        container.classList.add('hidden');
+                        progressBar.style.width = '0%';
+                        progressText.innerText = '0%';
+                    }, 500);
+                }
+            }, 300);
+        }
+
+        // Individual File Download Method
+        function downloadSingle(canvasId, fileName) {
+            const canvas = document.getElementById(canvasId);
+            const url = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = url;
+            link.click();
+            showToast(`✓ Đã tải xuống file ${fileName}`, 'success');
+        }
+
+        // Copy generic string values to Clipboard
+        function copyToClipboard(text, description) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast(`✓ Đã sao chép ${description} vào bộ nhớ tạm!`, 'success');
+        }
+
+        // Copy markdown report field values
+        function copyReport() {
+            const reportEl = document.getElementById('markdown-report');
+            reportEl.select();
+            document.execCommand('copy');
+            showToast('✓ Đã sao chép báo cáo Markdown Sprint 2!', 'success');
+        }
+
+        // Toast alert feedback controls
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-lg text-xs font-semibold shadow-2xl border transition duration-300 transform translate-y-2 opacity-0 flex items-center space-x-2 ${
+                type === 'success' 
+                ? 'bg-emerald-950 text-emerald-400 border-emerald-500/20' 
+                : 'bg-rose-950 text-rose-400 border-rose-500/20'
+            }`;
+            toast.innerHTML = `
+                <span class="flex-grow">${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Auto dismiss
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        // Modal Preview Manager
+        function previewMockup(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const imgPreview = document.getElementById('modal-img-preview');
+            const imgTitle = document.getElementById('modal-img-title');
+            
+            imgPreview.src = canvas.toDataURL('image/png');
+            
+            const titles = {
+                'canvas-cart': '01_Giỏ_Hàng_Chính_Thức.png - Desktop High Fidelity View',
+                'canvas-empty': '02_Giỏ_Hàng_Trống_UX.png - User Flow Exceptional Case',
+                'canvas-checkout': '03_Form_Thanh_Toán.png - Core Conversion Funnel',
+                'canvas-validation': '04_Form_Cảnh_Báo_Lỗi.png - Form Error Validation Rule',
+                'canvas-success': '05_Xác_Nhận_Thành_Công.png - Thank You Screen & Order Tracking'
+            };
+
+            imgTitle.innerText = titles[canvasId] || 'Figma Frame Mockup';
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
+
+        function closePreview() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

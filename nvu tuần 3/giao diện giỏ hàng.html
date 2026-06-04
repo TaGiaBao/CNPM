@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Figma Design Tool - Phân hệ Giỏ hàng & Thanh toán - Vũ Tùng Dương</title>
+    <!-- Tailwind CSS for Workspace UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Poppins for Design System elements -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Figma Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Poppins', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        figma: {
+                            bg: '#1E1E1E',
+                            sidebar: '#2C2C2C',
+                            border: '#3E3E3E',
+                            active: '#0C8CE9',
+                            hover: '#333333',
+                            text: '#E5E5E5',
+                            muted: '#B3B3B3',
+                            canvas: '#1E1E1E',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Transparent checkerboard canvas pattern for Figma Artboards */
+        .figma-checkerboard {
+            background-color: #1e1e1e;
+            background-image: radial-gradient(#2d2d2d 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+
+        /* Elements bounding box hover indicator like Figma */
+        .figma-layer-hover {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+        }
+        .figma-layer-hover:hover {
+            outline: 2px solid #0C8CE9 !important;
+            outline-offset: 1px;
+        }
+        .figma-layer-hover:hover::after {
+            content: attr(data-layer-name);
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background: #0C8CE9;
+            color: white;
+            font-size: 9px;
+            font-family: 'Fira Code', monospace;
+            padding: 2px 4px;
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+            border-radius: 1px;
+        }
+
+        /* Active Selected Element indicator */
+        .figma-layer-selected {
+            outline: 2px solid #0C8CE9 !important;
+            outline-offset: 1px;
+        }
+
+        /* Scrollbar aesthetics for Figma UI Panels */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2c2c2c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #606060;
+        }
+
+        /* 12-Column Grid representation */
+        .figma-grid-cols {
+            background-image: linear-gradient(to right, rgba(255, 100, 100, 0.04) calc((100% - 264px) / 12), transparent calc((100% - 264px) / 12), transparent calc((100% - 264px) / 12 + 24px));
+            background-size: calc((100% - 240px) / 12 + 24px) 100%;
+            background-position: 120px 0;
+        }
+        
+        /* Shaking animation for validation error flow demo */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        .animate-shake {
+            animation: shake 0.15s ease-in-out 0s 2;
+        }
+
+        /* Figma hotspot flash effect on click */
+        @keyframes hotspotFlash {
+            0%, 100% { box-shadow: 0 0 0 0px rgba(12, 140, 233, 0); background-color: rgba(12, 140, 233, 0); }
+            50% { box-shadow: 0 0 0 4px rgba(12, 140, 233, 0.6); background-color: rgba(12, 140, 233, 0.25); }
+        }
+        .hotspot-active-flash {
+            animation: hotspotFlash 0.35s ease-in-out;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body class="bg-figma-bg text-figma-text min-h-screen overflow-hidden font-sans select-none flex flex-col">
+
+    <!-- FIGMA TOP NAVIGATION BAR -->
+    <header class="h-12 bg-figma-sidebar border-b border-figma-border flex items-center justify-between px-3 shrink-0 z-50">
+        <!-- Left: Figma Main Menu Tools -->
+        <div class="flex items-center gap-1.5">
+            <!-- Figma Icon -->
+            <div class="w-8 h-8 rounded flex items-center justify-center hover:bg-figma-hover cursor-pointer transition">
+                <svg class="w-5 h-5" viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30 45C30 20.1472 50.1472 0 75 0C99.8528 0 120 20.1472 120 45C120 69.8528 99.8528 90 75 90C50.1472 90 30 69.8528 30 45Z" fill="#F24E1E"/>
+                    <path d="M30 135C30 110.147 50.1472 90 75 90C75 90 120 90 120 90L120 135C120 159.853 99.8528 180 75 180C50.1472 180 30 159.853 30 135Z" fill="#1ABC9C"/>
+                    <path d="M0 135C0 110.147 20.1472 90 45 90L75 90L75 180L45 180C20.1472 180 0 159.853 0 135Z" fill="#0ACF83"/>
+                    <path d="M0 45C0 20.1472 20.1472 0 45 0L75 0L75 90L45 90C20.1472 90 0 69.8528 0 45Z" fill="#FF7262"/>
+                    <path d="M75 90C99.8528 90 120 110.147 120 135C120 159.853 99.8528 180 75 180C75 180 75 135 75 135L75 90Z" fill="#A259FF"/>
+                </svg>
+            </div>
+            
+            <div class="h-5 w-[1px] bg-figma-border mx-1"></div>
+
+            <!-- Basic Tools Simulation -->
+            <button id="tool-select" onclick="setFigmaTool('select')" class="w-8 h-8 rounded bg-figma-hover text-figma-active flex items-center justify-center cursor-pointer" title="Move Tool (V)">
+                <i class="fa-solid fa-arrow-pointer text-sm"></i>
+            </button>
+            <button id="tool-frame" onclick="setFigmaTool('frame')" class="w-8 h-8 rounded hover:bg-figma-hover text-figma-muted flex items-center justify-center cursor-pointer" title="Frame Tool (F)">
+                <i class="fa-solid fa-border-all text-xs"></i>
+            </button>
+            <button id="tool-hand" onclick="setFigmaTool('hand')" class="w-8 h-8 rounded hover:bg-figma-hover text-figma-muted flex items-center justify-center cursor-pointer" title="Hand Tool (H)">
+                <i class="fa-regular fa-hand text-sm"></i>
+            </button>
+            <button id="tool-comment" onclick="setFigmaTool('comment')" class="w-8 h-8 rounded hover:bg-figma-hover text-figma-muted flex items-center justify-center cursor-pointer" title="Add Comment (C)">
+                <i class="fa-regular fa-comment text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Center: File Title & Status -->
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold hover:bg-figma-hover px-2 py-1 rounded cursor-pointer">Bookstore - Shopping Cart & Checkout (Sprint 2)</span>
+            <span class="text-[10px] text-figma-muted bg-figma-border px-1.5 py-0.5 rounded font-mono">Draft</span>
+        </div>
+
+        <!-- Right: Team Member Avatars, Share, Present Mode -->
+        <div class="flex items-center gap-3">
+            <!-- Avatars of Team -->
+            <div class="flex -space-x-1.5">
+                <div class="w-6 h-6 rounded-full bg-blue-500 border border-figma-sidebar flex items-center justify-center text-[10px] font-bold text-white shadow-sm cursor-help" title="Vũ Tùng Dương (Owner)">D</div>
+                <div class="w-6 h-6 rounded-full bg-emerald-500 border border-figma-sidebar flex items-center justify-center text-[10px] font-bold text-white shadow-sm cursor-help" title="Nguyễn Thái Hà (Admin UI)">H</div>
+                <div class="w-6 h-6 rounded-full bg-amber-500 border border-figma-sidebar flex items-center justify-center text-[10px] font-bold text-white shadow-sm cursor-help" title="Lại Xuân Biển (Lead Developer)">B</div>
+                <div class="w-6 h-6 rounded-full bg-indigo-500 border border-figma-sidebar flex items-center justify-center text-[10px] font-bold text-white shadow-sm cursor-help" title="Đặng Tuấn Dũng (Dev/Setup)">D</div>
+            </div>
+
+            <button onclick="shareFigmaLink()" class="px-3 py-1 bg-figma-active hover:bg-blue-600 text-xs font-semibold text-white rounded transition cursor-pointer flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Share
+            </button>
+
+            <!-- Play Presenter Button for interactive mockups -->
+            <button onclick="togglePrototypeMode()" id="btn-present" class="w-8 h-8 rounded hover:bg-figma-hover text-emerald-500 hover:text-emerald-400 flex items-center justify-center transition cursor-pointer" title="Trình diễn thử nghiệm (Present Flow)">
+                <i class="fa-solid fa-play text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN FIGMA WORKSPACE BODY -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- LEFT PANEL: PAGES & LAYERS -->
+        <aside class="w-64 bg-figma-sidebar border-r border-figma-border flex flex-col shrink-0">
+            <!-- Pages Segment -->
+            <div class="p-3 border-b border-figma-border">
+                <span class="text-[10px] uppercase font-bold text-figma-muted tracking-wider block mb-2">Pages</span>
+                <div class="space-y-1">
+                    <button onclick="switchFigmaPage('hifi')" id="page-btn-hifi" class="w-full text-left py-1.5 px-2 text-xs font-semibold rounded flex items-center justify-between bg-figma-hover text-white">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-figma-active"></i> ✨ High-Fi Mockups</span>
+                        <span class="text-[9px] bg-figma-border px-1 rounded text-figma-muted">5</span>
+                    </button>
+                    <button onclick="switchFigmaPage('designsystem')" id="page-btn-designsystem" class="w-full text-left py-1.5 px-2 text-xs font-medium rounded flex items-center justify-between text-figma-muted hover:bg-figma-hover hover:text-figma-text">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-palette"></i> 🎨 Design System & Vars</span>
+                        <span class="text-[9px] bg-figma-border px-1 rounded text-figma-muted">3</span>
+                    </button>
+                    <button onclick="switchFigmaPage('lofi')" id="page-btn-lofi" class="w-full text-left py-1.5 px-2 text-xs font-medium rounded flex items-center justify-between text-figma-muted hover:bg-figma-hover hover:text-figma-text">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-compass-drafting"></i> 📐 Wireframes (Lo-Fi)</span>
+                        <span class="text-[9px] bg-figma-border px-1 rounded text-figma-muted">2</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Layers Segment -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <div class="p-3 shrink-0 flex items-center justify-between text-[10px] uppercase font-bold text-figma-muted tracking-wider">
+                    <span>Layers (Artboards)</span>
+                    <i class="fa-solid fa-magnifying-glass hover:text-white cursor-pointer"></i>
+                </div>
+                
+                <div id="layers-tree-container" class="flex-1 overflow-y-auto px-2 space-y-0.5">
+                    <!-- Loaded dynamically via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Workspace Task Status Tracker -->
+            <div class="p-4 bg-figma-bg border-t border-figma-border space-y-2 text-[11px] shrink-0">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-figma-muted uppercase">Sprint 2 Progress</span>
+                    <span class="text-figma-active font-bold">100% Done</span>
+                </div>
+                <div class="w-full bg-figma-border h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-figma-active h-full rounded-full" style="width: 100%;"></div>
+                </div>
+                <p class="text-[10px] text-figma-muted leading-relaxed">
+                    Vũ Tùng Dương đã hoàn thiện đầy đủ Wireframes, Mockups chi tiết, rà soát UX/Heuristic và thiết kế luồng thành công.
+                </p>
+            </div>
+        </aside>
+
+        <!-- CANVAS WORKSPACE CONTAINER (Middle Panel) -->
+        <main class="flex-1 figma-checkerboard overflow-auto relative flex items-center justify-center p-8 select-none" id="figma-canvas-area">
+            
+            <!-- Horizontal and Vertical Figma Canvas Ruler Guides -->
+            <div class="absolute top-0 left-0 right-0 h-4 bg-figma-sidebar border-b border-figma-border flex items-center justify-between text-[9px] text-figma-muted px-4 select-none z-10 font-mono pointer-events-none">
+                <span>0 px</span>
+                <span>200 px</span>
+                <span>400 px</span>
+                <span>600 px</span>
+                <span>800 px</span>
+                <span>1000 px</span>
+                <span>1200 px</span>
+            </div>
+
+            <!-- Canvas Grid Overlay Layers toggleable -->
+            <div id="canvas-grid-overlay" class="hidden absolute inset-0 figma-grid-cols z-20 pointer-events-none"></div>
+
+            <!-- DYNAMIC ACTIVE ARTBOARD VIEWER -->
+            <div id="artboard-canvas-wrapper" class="relative bg-white text-slate-900 shadow-2xl rounded-sm transition-all duration-300 z-10" style="width: 1120px; min-height: 640px;">
+                
+                <!-- Mockup Design Elements Frame Render -->
+                <div id="active-mockup-frame" class="w-full h-full p-8 relative">
+                    <!-- Dynamic mockup template content renders here -->
+                </div>
+
+            </div>
+
+            <!-- Floating Canvas Settings Tool Box -->
+            <div class="absolute bottom-4 left-4 bg-figma-sidebar/90 backdrop-blur border border-figma-border rounded-lg px-3 py-2 flex items-center gap-4 text-xs shadow-xl z-40">
+                <div class="flex items-center gap-1.5 border-r border-figma-border pr-3">
+                    <span class="text-figma-muted">Canvas Style:</span>
+                    <button onclick="toggleCanvasGrid()" id="btn-grid-toggle" class="hover:text-white px-2 py-0.5 rounded hover:bg-figma-hover text-figma-muted text-[10px] font-mono">
+                        <i class="fa-solid fa-table-cells-large mr-1"></i> Grid ON
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="adjustCanvasZoom(-10)" class="hover:text-white cursor-pointer"><i class="fa-solid fa-minus"></i></button>
+                    <span id="canvas-zoom-indicator" class="font-mono text-[11px] text-figma-muted">100%</span>
+                    <button onclick="adjustCanvasZoom(10)" class="hover:text-white cursor-pointer"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- RIGHT PANEL: DESIGN / INSPECT PROPERTIES PANEL -->
+        <aside class="w-80 bg-figma-sidebar border-l border-figma-border flex flex-col shrink-0">
+            <!-- Tabs Menu (Design / Inspect / UX Audit) -->
+            <div class="flex border-b border-figma-border shrink-0">
+                <button onclick="switchFigmaTab('design')" id="tab-btn-design" class="flex-1 text-center py-2.5 text-xs font-semibold border-b-2 border-figma-active text-white bg-figma-hover">
+                    Design
+                </button>
+                <button onclick="switchFigmaTab('inspect')" id="tab-btn-inspect" class="flex-1 text-center py-2.5 text-xs font-medium border-b-2 border-transparent text-figma-muted hover:text-white">
+                    Inspect
+                </button>
+                <button onclick="switchFigmaTab('uxaudit')" id="tab-btn-uxaudit" class="flex-1 text-center py-2.5 text-[10px] font-medium border-b-2 border-transparent text-amber-500 hover:text-amber-400">
+                    Heuristic UX
+                </button>
+            </div>
+
+            <!-- Tab Content Wrapper -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-5" id="figma-sidebar-tab-content">
+                
+                <!-- DESIGN TAB (Default Panel) -->
+                <div id="panel-content-design" class="space-y-5">
+                    <!-- File Metadata Info Card -->
+                    <div class="bg-figma-bg p-3 rounded border border-figma-border space-y-1.5">
+                        <h4 class="text-xs font-bold text-white uppercase tracking-wide">UX Design Deliverable</h4>
+                        <p class="text-[11px] text-figma-muted">
+                            Sản phẩm thực tế thiết kế bởi **Vũ Tùng Dương** thuộc sprint 2 đáp ứng chuẩn doanh nghiệp cao cấp.
+                        </p>
+                        <div class="flex gap-1 flex-wrap pt-1">
+                            <span class="text-[9px] bg-blue-950 text-blue-300 px-1.5 py-0.5 rounded">Figma V1.0</span>
+                            <span class="text-[9px] bg-purple-950 text-purple-300 px-1.5 py-0.5 rounded">12-Col Grid</span>
+                            <span class="text-[9px] bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded">High Fidelity</span>
+                        </div>
+                    </div>
+
+                    <!-- Alignment Tools Simulator -->
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-figma-muted block mb-2">Alignments</span>
+                        <div class="grid grid-cols-6 gap-1 bg-figma-bg p-1.5 rounded border border-figma-border text-center">
+                            <button class="hover:bg-figma-hover p-1 rounded text-figma-muted cursor-not-allowed text-xs"><i class="fa-solid fa-align-left"></i></button>
+                            <button class="hover:bg-figma-hover p-1 rounded text-figma-muted cursor-not-allowed text-xs"><i class="fa-solid fa-align-center"></i></button>
+                            <button class="hover:bg-figma-hover p-1 rounded text-figma-muted cursor-not-allowed text-xs"><i class="fa-solid fa-align-right"></i></button>
+                            <button class="hover:bg-figma-hover p-1 rounded text-figma-muted cursor-not-allowed text-xs"><i class="fa-solid fa-magnifying-glass-chart"></i></button>
+                            <button class="hover:bg-figma-hover p-1 rounded text-figma-muted cursor-not-allowed text-xs"><i class="fa-solid fa-arrows-up-to-line"></i></button>
+                            <button class="hover:bg-figma-hover p-1 rounded text-figma-muted cursor-not-allowed text-xs"><i class="fa-solid fa-arrows-down-to-line"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Figma Wiring overlay -->
+                    <div class="bg-figma-bg p-3 rounded border border-figma-border space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] uppercase font-bold text-figma-muted">Prototype Settings</span>
+                            <span class="text-[9px] text-emerald-400 font-mono">Ready</span>
+                        </div>
+                        <p class="text-[10px] text-figma-muted">Trực quan hóa luồng đi dây nối liên kết các nút bấm trong chế độ trình chiếu.</p>
+                        <button onclick="toggleFigmaWires()" id="btn-toggle-wires" class="w-full bg-[#333333] hover:bg-[#444444] border border-figma-border text-white text-[11px] py-1.5 rounded font-semibold transition">
+                            <i class="fa-solid fa-circle-nodes text-figma-active mr-1"></i> Hiện sơ đồ dây nối Figma (Wires)
+                        </button>
+                    </div>
+
+                    <!-- Artboard Layout Parameters -->
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-figma-muted block mb-2">Frame (Artboard Info)</span>
+                        <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                            <div class="bg-figma-bg p-2 rounded border border-figma-border flex justify-between">
+                                <span class="text-figma-muted">W:</span>
+                                <span class="text-white">1120 px</span>
+                            </div>
+                            <div class="bg-figma-bg p-2 rounded border border-figma-border flex justify-between">
+                                <span class="text-figma-muted">H:</span>
+                                <span class="text-white">Auto (Res)</span>
+                            </div>
+                            <div class="bg-figma-bg p-2 rounded border border-figma-border flex justify-between">
+                                <span class="text-figma-muted">X:</span>
+                                <span class="text-white">450 px</span>
+                            </div>
+                            <div class="bg-figma-bg p-2 rounded border border-figma-border flex justify-between">
+                                <span class="text-figma-muted">Y:</span>
+                                <span class="text-white">120 px</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auto-Layout Settings Simulation -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] uppercase font-bold text-figma-muted">Auto Layout</span>
+                            <span class="text-emerald-400 text-[10px] font-semibold bg-emerald-950 px-1.5 py-0.5 rounded">Active</span>
+                        </div>
+                        <div class="bg-figma-bg p-3 rounded border border-figma-border space-y-2 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="text-figma-muted">Direction:</span>
+                                <span class="text-white font-semibold flex items-center gap-1"><i class="fa-solid fa-arrow-down-long"></i> Vertical Flex</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-figma-muted">Spacing gap:</span>
+                                <span class="text-white font-mono">24 px</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-figma-muted">Padding:</span>
+                                <span class="text-white font-mono">Top/Bottom 32px, Left/Right 32px</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INSPECT TAB -->
+                <div id="panel-content-inspect" class="hidden space-y-4">
+                    <div class="bg-figma-bg p-3 rounded border border-figma-border">
+                        <span class="text-[10px] text-figma-muted font-bold block mb-1">SELECTED LAYER NAME</span>
+                        <span id="inspect-layer-name" class="text-xs text-white font-semibold block">Artboard Canvas Frame</span>
+                    </div>
+
+                    <!-- Tailwind Classes Box -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-figma-muted font-bold uppercase">Tailwind Utility Classes</span>
+                            <button onclick="copyInspectValue('inspect-tailwind-classes')" class="text-[10px] text-figma-active hover:underline bg-transparent border-0 cursor-pointer">Copy</button>
+                        </div>
+                        <div class="bg-figma-bg p-2.5 rounded border border-figma-border font-mono text-[10.5px] text-emerald-400 break-words leading-relaxed" id="inspect-tailwind-classes">
+                            w-full h-full p-8 relative bg-white text-slate-900 rounded-sm
+                        </div>
+                    </div>
+
+                    <!-- Raw CSS Properties Box -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-figma-muted font-bold uppercase">CSS Styles Code</span>
+                            <button onclick="copyInspectValue('inspect-css-properties')" class="text-[10px] text-figma-active hover:underline bg-transparent border-0 cursor-pointer">Copy</button>
+                        </div>
+                        <pre class="bg-figma-bg p-2.5 rounded border border-figma-border font-mono text-[10.5px] text-amber-400 whitespace-pre-wrap leading-relaxed" id="inspect-css-properties">width: 100%;
+height: 100%;
+padding: 32px;
+position: relative;
+background-color: #FFFFFF;
+color: #0F172A;
+border-radius: 4px;</pre>
+                    </div>
+                </div>
+
+                <!-- HEURISTIC UX TAB -->
+                <div id="panel-content-uxaudit" class="hidden space-y-4">
+                    <div class="bg-amber-950/40 border border-amber-900/60 p-3 rounded text-xs text-amber-200">
+                        <span class="font-bold block mb-1 uppercase tracking-wider"><i class="fa-solid fa-scale-balanced mr-1"></i> Heuristic UX Check (Vũ Tùng Dương)</span>
+                        Phân tích các quy chuẩn tương tác được áp dụng trong luồng mua bán Bookstore.
+                    </div>
+
+                    <div class="space-y-3.5 text-xs text-figma-muted">
+                        <div class="border-b border-figma-border pb-2.5">
+                            <h5 class="font-bold text-white mb-1">1. Hick's Law (Giảm tải nhận thức)</h5>
+                            <p class="leading-relaxed">Tối giản phương thức thanh toán thành 2 nhóm rõ ràng (COD và Quét mã VNPay QR). Giảm thiểu tối đa do dự của người dùng tại bước cuối cùng.</p>
+                        </div>
+                        <div class="border-b border-figma-border pb-2.5">
+                            <h5 class="font-bold text-white mb-1">2. Error Prevention & Recovery</h5>
+                            <p class="leading-relaxed">Hệ thống bắt lỗi thông minh cung cấp phản hồi lỗi tức thì (Inline validation) thay vì báo động tổng thể, hiển thị trực quan ô lỗi cùng thông điệp giải quyết trực diện.</p>
+                        </div>
+                        <div class="border-b border-figma-border pb-2.5">
+                            <h5 class="font-bold text-white mb-1">3. Aesthetic & Minimalist Design</h5>
+                            <p class="leading-relaxed">Cấu trúc chia 8-cột và 4-cột cân bằng trực giác. Thông tin hóa đơn được giữ ở trạng thái bán tĩnh (Sticky sidebar) giúp kiểm chứng nhanh giá trị tiền.</p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-white mb-1">4. Feedback on Success</h5>
+                            <p class="leading-relaxed">Bổ sung hóa đơn chi tiết động và hệ thống theo dõi hành trình giao sách giúp người dùng cảm thấy yên tâm và kiểm soát được tiến độ đơn hàng.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- OVERLAY PROTOTYPE DEMO IFRAME VIEWPORT MODAL -->
+    <div id="prototype-overlay" class="hidden fixed inset-0 bg-[#0B0F19]/90 z-[999] flex flex-col" onclick="triggerHotspotFlash(event)">
+        <!-- Prototype Frame Header Bar -->
+        <div class="bg-[#111827] border-b border-slate-800 px-6 py-4 flex items-center justify-between shadow-md shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid fa-play"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-white">Figma Prototype Presentation</h2>
+                    <p class="text-xs text-slate-400 font-mono">Luồng Mua Hàng &amp; Thanh Toán • Vũ Tùng Dương</p>
+                </div>
+            </div>
+
+            <!-- Flow step visual timeline tracker -->
+            <div class="hidden md:flex items-center gap-2 text-xs font-mono">
+                <span id="p-dot-cart" class="px-2.5 py-1 rounded bg-blue-600 text-white font-bold">1. Cart</span>
+                <i class="fa-solid fa-chevron-right text-slate-600 text-[10px]"></i>
+                <span id="p-dot-checkout" class="px-2.5 py-1 rounded bg-slate-800 text-slate-400">2. Checkout</span>
+                <i class="fa-solid fa-chevron-right text-slate-600 text-[10px]"></i>
+                <span id="p-dot-success" class="px-2.5 py-1 rounded bg-slate-800 text-slate-400">3. Success</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="resetPrototypeDemo()" class="text-xs text-slate-400 hover:text-white px-3 py-1.5 border border-slate-700 hover:border-slate-500 rounded font-medium transition cursor-pointer">
+                    <i class="fa-solid fa-rotate-right mr-1.5"></i> Reset Flow
+                </button>
+                <button onclick="togglePrototypeMode()" class="text-slate-400 hover:text-white text-xl p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Interactive Prototype Canvas inside the presentation -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 flex items-center justify-center bg-slate-950">
+            <!-- Simulated Desktop Browser Canvas Frame -->
+            <div class="w-full max-w-5xl bg-white text-slate-900 rounded-xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col relative transition-all duration-300 min-h-[580px]" id="simulated-browser-window">
+                
+                <!-- Browser mockup Address Bar -->
+                <div class="bg-slate-100 border-b border-slate-200 px-4 py-3 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-rose-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+                    </div>
+                    <div class="bg-white border border-slate-200/80 text-slate-400 font-mono text-[11px] px-6 py-1 rounded-md w-1/2 text-center select-none shadow-inner flex items-center justify-center gap-1.5 truncate">
+                        <i class="fa-solid fa-lock text-emerald-500 text-[9px]"></i>
+                        <span>bookstore.vn/shopping/cart-checkout</span>
+                    </div>
+                    <div class="text-[10px] font-mono text-slate-400 font-bold">
+                        Figma Presentation Frame
+                    </div>
+                </div>
+
+                <!-- Simulated Presentation content loaded here -->
+                <div id="prototype-canvas-body" class="p-6 md:p-10 flex-1 bg-slate-50 overflow-y-auto relative">
+                    <!-- Loaded dynamically via state machine -->
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- VNPAY QR SIMULATOR OVERLAY MODAL -->
+    <div id="vnpay-modal" class="hidden fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <img src="https://placehold.co/100x30/004b91/ffffff?text=VNPay+QR" alt="VNPay Logo" class="h-6">
+                <button onclick="closeVNPayModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <p class="text-xs text-slate-500 leading-relaxed">Vui lòng quét mã bên dưới bằng ứng dụng ngân hàng hoặc ví VNPay để thực hiện giao dịch thử nghiệm.</p>
+            
+            <!-- Generate a realistic QR design -->
+            <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center space-y-2">
+                <img id="vnpay-qr-image" src="https://placehold.co/180x180/000000/ffffff?text=VietQR" alt="VNPay VietQR Scan" class="border border-slate-200 p-1 bg-white rounded shadow-sm">
+                <span id="vnpay-amount" class="text-lg font-extrabold text-blue-800 font-mono">285.000 đ</span>
+            </div>
+
+            <div class="space-y-2">
+                <button onclick="confirmVNPayPayment()" class="w-full bg-[#004b91] hover:bg-blue-900 text-white py-3 rounded-lg text-xs font-bold shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i> Xác nhận Đã thanh toán thành công
+                </button>
+                <p class="text-[10px] text-slate-400 font-medium">Bản mô phỏng tương tác cao cấp của Vũ Tùng Dương</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF INVOICE RECEIPT MODAL -->
+    <div id="receipt-modal" class="hidden fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Hóa đơn thanh toán sách điện tử</h3>
+                <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div id="receipt-invoice-body" class="p-4 border border-slate-200 bg-slate-50 rounded-xl font-mono text-[11px] text-slate-800 space-y-3">
+                <!-- Injected dynamically via JS -->
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-xs py-2.5 rounded-lg font-bold"><i class="fa-solid fa-print mr-1"></i> In hóa đơn (PDF)</button>
+                <button onclick="closeReceiptModal()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs py-2.5 rounded-lg font-bold">Đóng lại</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROTO CONNECTIONS SVG OVERLAY FOR FIGMA WIRES -->
+    <svg id="figma-wires-svg" class="hidden absolute inset-0 w-full h-full pointer-events-none z-30"></svg>
+
+    <!-- MAIN CORE LOGIC & STATE MACHINE -->
+    <script>
+        // Workspace state machine configuration
+        const state = {
+            activePage: 'hifi', // 'hifi' | 'lofi' | 'designsystem'
+            activeArtboard: 'artboard_cart', // depends on active page
+            inspectTab: 'design', // 'design' | 'inspect' | 'uxaudit'
+            figmaTool: 'select', // 'select' | 'frame' | 'hand' | 'comment'
+            zoom: 100,
+            showGrid: false,
+            showWires: false,
+            selectedElementId: null,
+
+            // Active Prototype values (State tracking)
+            proto: {
+                currentStep: 'cart', // 'cart' | 'checkout' | 'success' | 'empty'
+                cartItems: [
+                    { id: 1, title: 'Đất Rừng Phương Nam', author: 'Đoàn Giỏi', price: 65000, qty: 1, imgGradient: 'linear-gradient(135deg, #15803d, #eab308)', icon: 'fa-tree' },
+                    { id: 2, title: 'Kinh Tế Học Vĩ Mô', author: 'Paul Samuelson', price: 110000, qty: 2, imgGradient: 'linear-gradient(135deg, #1e3a8a, #3b82f6)', icon: 'fa-chart-line' },
+                    { id: 3, title: 'Đánh Thức Con Người Phi Thường', author: 'Anthony Robbins', price: 95000, qty: 1, imgGradient: 'linear-gradient(135deg, #7c3aed, #f43f5e)', icon: 'fa-dove' }
+                ],
+                promoCode: '',
+                promoApplied: false,
+                discountValue: 0,
+                shippingFee: 30000,
+                fullName: 'Vũ Tùng Dương',
+                phone: '0987654321',
+                address: 'Số 1 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội',
+                paymentMethod: 'cod',
+                errors: { fullName: false, phone: false, address: false }
+            }
+        };
+
+        // Cache initial list to reset prototype easily
+        const defaultProtoState = JSON.stringify(state.proto);
+
+        // Figma pages, layers, and content models
+        const artboards = {
+            hifi: [
+                { id: 'artboard_cart', name: '01. Desktop - Cart Page', icon: 'fa-cart-shopping' },
+                { id: 'artboard_checkout', name: '02. Desktop - Checkout Page', icon: 'fa-credit-card' },
+                { id: 'artboard_validation', name: '03. Desktop - Form Validation Errors', icon: 'fa-circle-exclamation' },
+                { id: 'artboard_success', name: '04. Desktop - Order Success', icon: 'fa-circle-check' },
+                { id: 'artboard_empty', name: '05. Desktop - Empty State', icon: 'fa-box-open' }
+            ],
+            designsystem: [
+                { id: 'artboard_colors', name: '❖ Colors Palette Variables', icon: 'fa-palette' },
+                { id: 'artboard_typography', name: '❖ Typography Scale Hierarchy', icon: 'fa-font' },
+                { id: 'artboard_components', name: '❖ Buttons & Form Elements', icon: 'fa-cubes' }
+            ],
+            lofi: [
+                { id: 'artboard_lofi_cart', name: '✏️ Lo-Fi Skeleton - Cart', icon: 'fa-compass-drafting' },
+                { id: 'artboard_lofi_checkout', name: '✏️ Lo-Fi Skeleton - Checkout', icon: 'fa-compass-drafting' }
+            ]
+        };
+
+        // Layer detailed properties database (Inspect specifications)
+        const inspectDB = {
+            'canvas_wrapper': {
+                name: 'Artboard Canvas Frame',
+                tailwind: 'w-full h-full p-8 relative bg-white text-slate-900 rounded-sm shadow-xl',
+                css: 'width: 100%;\nheight: 100%;\npadding: 32px;\nposition: relative;\nbackground-color: #FFFFFF;\ncolor: #0F172A;\nborder-radius: 4px;'
+            },
+            'primary_cta_btn': {
+                name: 'Primary Button (CTA)',
+                tailwind: 'bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-sans font-semibold text-sm shadow-md transition px-6 py-3.5 flex items-center justify-center gap-2',
+                css: 'background-color: #1D4ED8;\nborder-radius: 8px;\nfont-family: "Inter", sans-serif;\nfont-weight: 600;\nfont-size: 14px;\nbox-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.1);\ntransition: all 0.2s;\npadding: 14px 24px;'
+            },
+            'input_field': {
+                name: 'Form Text Input Control',
+                tailwind: 'bg-white border border-slate-200 rounded-lg outline-none text-sm p-3 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100',
+                css: 'background-color: #FFFFFF;\nborder: 1px solid #E2E8F0;\nborder-radius: 8px;\npadding: 12px;\nfont-size: 14px;\ntransition: border-color 0.15s, box-shadow 0.15s;'
+            },
+            'book_card': {
+                name: 'Book Item Container',
+                tailwind: 'flex items-center justify-between py-4 border-b border-slate-100 transition-all duration-150',
+                css: 'display: flex;\nalign-items: center;\njustify-content: space-between;\npadding-top: 16px;\npadding-bottom: 16px;\nborder-bottom: 1px solid #F1F5F9;'
+            },
+            'order_summary_panel': {
+                name: 'Sticky Order Summary Block',
+                tailwind: 'bg-white border border-slate-100 rounded-xl shadow-sm p-6 space-y-4',
+                css: 'background-color: #FFFFFF;\nborder: 1px solid #F1F5F9;\nborder-radius: 12px;\nbox-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);\npadding: 24px;'
+            }
+        };
+
+        // Bootstrapping operations on startup
+        window.onload = function() {
+            switchFigmaPage('hifi'); 
+        };
+
+        // Navigation Actions
+        function setFigmaTool(tool) {
+            state.figmaTool = tool;
+            const tools = ['select', 'frame', 'hand', 'comment'];
+            tools.forEach(t => {
+                const el = document.getElementById(`tool-${t}`);
+                if (t === tool) {
+                    el.className = "w-8 h-8 rounded bg-figma-hover text-figma-active flex items-center justify-center cursor-pointer";
+                } else {
+                    el.className = "w-8 h-8 rounded hover:bg-figma-hover text-figma-muted flex items-center justify-center cursor-pointer";
+                }
+            });
+        }
+
+        function switchFigmaPage(page) {
+            state.activePage = page;
+            state.activeArtboard = artboards[page][0].id; // reset active artboard to first in array
+
+            const pages = ['hifi', 'designsystem', 'lofi'];
+            pages.forEach(p => {
+                const btn = document.getElementById(`page-btn-${p}`);
+                if (p === page) {
+                    btn.className = "w-full text-left py-1.5 px-2 text-xs font-semibold rounded flex items-center justify-between bg-figma-hover text-white";
+                } else {
+                    btn.className = "w-full text-left py-1.5 px-2 text-xs font-medium rounded flex items-center justify-between text-figma-muted hover:bg-figma-hover hover:text-figma-text";
+                }
+            });
+
+            renderLayersTree();
+            renderFigmaCanvas();
+        }
+
+        function selectArtboard(artboardId) {
+            state.activeArtboard = artboardId;
+            renderLayersTree();
+            renderFigmaCanvas();
+        }
+
+        function switchFigmaTab(tab) {
+            state.inspectTab = tab;
+            const tabDesign = document.getElementById('tab-btn-design');
+            const tabInspect = document.getElementById('tab-btn-inspect');
+            const tabUxaudit = document.getElementById('tab-btn-uxaudit');
+            const panelDesign = document.getElementById('panel-content-design');
+            const panelInspect = document.getElementById('panel-content-inspect');
+            const panelUxaudit = document.getElementById('panel-content-uxaudit');
+
+            // Reset class lists
+            tabDesign.className = "flex-1 text-center py-2.5 text-xs font-medium border-b-2 border-transparent text-figma-muted hover:text-white";
+            tabInspect.className = "flex-1 text-center py-2.5 text-xs font-medium border-b-2 border-transparent text-figma-muted hover:text-white";
+            tabUxaudit.className = "flex-1 text-center py-2.5 text-[10px] font-medium border-b-2 border-transparent text-amber-500 hover:text-amber-400";
+            
+            panelDesign.classList.add('hidden');
+            panelInspect.classList.add('hidden');
+            panelUxaudit.classList.add('hidden');
+
+            if (tab === 'design') {
+                tabDesign.className = "flex-1 text-center py-2.5 text-xs font-semibold border-b-2 border-figma-active text-white bg-figma-hover";
+                panelDesign.classList.remove('hidden');
+            } else if (tab === 'inspect') {
+                tabInspect.className = "flex-1 text-center py-2.5 text-xs font-semibold border-b-2 border-figma-active text-white bg-figma-hover";
+                panelInspect.classList.remove('hidden');
+            } else if (tab === 'uxaudit') {
+                tabUxaudit.className = "flex-1 text-center py-2.5 text-[10px] font-bold border-b-2 border-amber-500 text-white bg-figma-hover";
+                panelUxaudit.classList.remove('hidden');
+            }
+        }
+
+        // Adjust Canvas zoom level metrics
+        function adjustCanvasZoom(delta) {
+            state.zoom = Math.max(50, Math.min(150, state.zoom + delta));
+            document.getElementById('canvas-zoom-indicator').innerText = `${state.zoom}%`;
+            document.getElementById('artboard-canvas-wrapper').style.transform = `scale(${state.zoom / 100})`;
+        }
+
+        // Toggle Grid guides lines
+        function toggleCanvasGrid() {
+            state.showGrid = !state.showGrid;
+            const overlay = document.getElementById('canvas-grid-overlay');
+            const btn = document.getElementById('btn-grid-toggle');
+
+            if (state.showGrid) {
+                overlay.classList.remove('hidden');
+                btn.className = "text-emerald-400 px-2 py-0.5 rounded bg-figma-hover text-[10px] font-mono";
+            } else {
+                overlay.classList.add('hidden');
+                btn.className = "hover:text-white px-2 py-0.5 rounded hover:bg-figma-hover text-figma-muted text-[10px] font-mono";
+            }
+        }
+
+        // Render layers tree inside left sidebar
+        function renderLayersTree() {
+            const container = document.getElementById('layers-tree-container');
+            const activeList = artboards[state.activePage];
+
+            let html = '';
+            activeList.forEach(art => {
+                const isActive = art.id === state.activeArtboard;
+                html += `
+                    <button onclick="selectArtboard('${art.id}')" class="w-full text-left py-1.5 px-2 text-xs rounded transition flex items-center justify-between ${isActive ? 'bg-figma-active text-white font-semibold' : 'text-figma-muted hover:bg-figma-hover hover:text-figma-text'}" style="padding-left: 12px;">
+                        <span class="flex items-center gap-2 truncate">
+                            <i class="fa-solid ${art.icon} text-[10px]"></i>
+                            <span class="truncate">${art.name}</span>
+                        </span>
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Triggers element selection and code inspecting
+        function inspectLayer(elementId, event) {
+            if (event) {
+                event.stopPropagation(); // prevent bundling to canvas frame
+            }
+            
+            // Remove previous active outline
+            const prevSelected = document.querySelectorAll('.figma-layer-selected');
+            prevSelected.forEach(el => el.classList.remove('figma-layer-selected'));
+
+            // Highlight selected
+            const activeEl = document.getElementById(elementId);
+            if (activeEl) {
+                activeEl.classList.add('figma-layer-selected');
+            }
+
+            // Fill inspect panel database properties
+            const spec = inspectDB[elementId] || inspectDB['canvas_wrapper'];
+            document.getElementById('inspect-layer-name').innerText = spec.name;
+            document.getElementById('inspect-tailwind-classes').innerText = spec.tailwind;
+            document.getElementById('inspect-css-properties').innerText = spec.css;
+
+            // Auto switch to inspect tab to show detail
+            switchFigmaTab('inspect');
+        }
+
+        function copyInspectValue(elementId) {
+            const txt = document.getElementById(elementId).innerText;
+            const tempInput = document.createElement("textarea");
+            tempInput.value = txt;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            // Show absolute message box
+            showToast("Đã sao chép thuộc tính CSS vào khay nhớ tạm!");
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement("div");
+            toast.className = "fixed bottom-16 right-4 bg-emerald-600 text-white font-sans text-xs px-4 py-2.5 rounded-lg shadow-xl z-[1001] flex items-center gap-2 transition-all duration-300";
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        function shareFigmaLink() {
+            const url = window.location.href;
+            const tempInput = document.createElement("textarea");
+            tempInput.value = url + "#figma-design-handoff";
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast("Đã sao chép link Figma Public của Vũ Tùng Dương!");
+        }
+
+        // Render simulated mockup templates inside active Artboard Frame Canvas
+        function renderFigmaCanvas() {
+            const frame = document.getElementById('active-mockup-frame');
+            
+            // Reset inspected styles selection states
+            switchFigmaTab('design');
+
+            switch (state.activeArtboard) {
+                case 'artboard_cart':
+                    frame.innerHTML = renderMockupCart();
+                    break;
+                case 'artboard_checkout':
+                    frame.innerHTML = renderMockupCheckout();
+                    break;
+                case 'artboard_validation':
+                    frame.innerHTML = renderMockupValidation();
+                    break;
+                case 'artboard_success':
+                    frame.innerHTML = renderMockupSuccess();
+                    break;
+                case 'artboard_empty':
+                    frame.innerHTML = renderMockupEmpty();
+                    break;
+                case 'artboard_colors':
+                    frame.innerHTML = renderMockupColors();
+                    break;
+                case 'artboard_typography':
+                    frame.innerHTML = renderMockupTypography();
+                    break;
+                case 'artboard_components':
+                    frame.innerHTML = renderMockupComponents();
+                    break;
+                case 'artboard_lofi_cart':
+                    frame.innerHTML = renderMockupLofiCart();
+                    break;
+                case 'artboard_lofi_checkout':
+                    frame.innerHTML = renderMockupLofiCheckout();
+                    break;
+            }
+
+            // Draw vector wires if Figma wires mode is active
+            if (state.showWires) {
+                drawFigmaVectorWires();
+            }
+        }
+
+        // HELPER DRAW BOOK PREMIUM COVERS VIA SVG
+        function renderBookCoverSVG(title, gradient, icon) {
+            return `
+                <div class="w-14 h-20 rounded shadow-md shrink-0 flex flex-col justify-between p-2 relative overflow-hidden" style="background: ${gradient};">
+                    <div class="absolute inset-0 opacity-10 bg-white" style="background-image: radial-gradient(circle, #fff 10%, transparent 10%); background-size: 8px 8px;"></div>
+                    <div class="text-white text-[7px] uppercase font-bold tracking-widest font-display truncate">Bookstore</div>
+                    <div class="text-white/90 text-center my-1">
+                        <i class="fa-solid ${icon} text-lg shadow-sm"></i>
+                    </div>
+                    <div class="text-white font-sans text-[7px] font-extrabold leading-tight line-clamp-2 truncate">${title}</div>
+                </div>
+            `;
+        }
+
+        // 1. MOCKUP CART PAGE (HI-FI)
+        function renderMockupCart() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2.5 py-0.5 rounded-full font-sans uppercase">Enterprise Cart</span>
+                            <h2 class="text-xl font-bold font-display text-slate-900 mt-1">Giỏ hàng của bạn</h2>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-500">Mã thiết kế: SD-202</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Left Cart list -->
+                        <div class="lg:col-span-8 space-y-3">
+                            <div class="bg-white border border-slate-100 rounded-xl p-5 space-y-4">
+                                <!-- Cart Items Header -->
+                                <div class="grid grid-cols-12 text-xs font-bold text-slate-400 border-b border-slate-100 pb-2">
+                                    <div class="col-span-7">SẢN PHẨM SÁCH</div>
+                                    <div class="col-span-3 text-center">SỐ LƯỢNG</div>
+                                    <div class="col-span-2 text-right">TỔNG TIỀN</div>
+                                </div>
+
+                                <!-- Book 1 -->
+                                <div id="book_card" onclick="inspectLayer('book_card', event)" class="figma-layer-hover grid grid-cols-12 items-center py-4 border-b border-slate-100 last:border-0" data-layer-name="Book Item Container">
+                                    <div class="col-span-7 flex items-center gap-3">
+                                        ${renderBookCoverSVG('Đất Rừng Phương Nam', 'linear-gradient(135deg, #15803d, #eab308)', 'fa-tree')}
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-800">Đất Rừng Phương Nam</h4>
+                                            <p class="text-[10px] text-slate-400">Đoàn Giỏi</p>
+                                            <p class="text-xs font-extrabold text-rose-500 mt-1">65.000 đ</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-3 flex justify-center">
+                                        <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden h-8">
+                                            <span class="px-2 py-1 text-xs text-slate-400 hover:bg-slate-50">-</span>
+                                            <span class="px-3 py-1 text-xs text-slate-800 font-bold bg-slate-50">1</span>
+                                            <span class="px-2 py-1 text-xs text-slate-400 hover:bg-slate-50">+</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-2 text-right text-xs font-bold text-slate-800">65.000 đ</div>
+                                </div>
+
+                                <!-- Book 2 -->
+                                <div class="grid grid-cols-12 items-center py-4 border-b border-slate-100 last:border-0">
+                                    <div class="col-span-7 flex items-center gap-3">
+                                        ${renderBookCoverSVG('Kinh Tế Học Vĩ Mô', 'linear-gradient(135deg, #1e3a8a, #3b82f6)', 'fa-chart-line')}
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-800">Kinh Tế Học Vĩ Mô</h4>
+                                            <p class="text-[10px] text-slate-400">Paul Samuelson</p>
+                                            <p class="text-xs font-extrabold text-rose-500 mt-1">110.000 đ</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-3 flex justify-center">
+                                        <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden h-8">
+                                            <span class="px-2 py-1 text-xs text-slate-400 hover:bg-slate-50">-</span>
+                                            <span class="px-3 py-1 text-xs text-slate-800 font-bold bg-slate-50">2</span>
+                                            <span class="px-2 py-1 text-xs text-slate-400 hover:bg-slate-50">+</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-2 text-right text-xs font-bold text-slate-800">220.000 đ</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Summary -->
+                        <div class="lg:col-span-4">
+                            <div id="order_summary_panel" onclick="inspectLayer('order_summary_panel', event)" class="figma-layer-hover bg-white border border-slate-100 rounded-xl p-5 space-y-4" data-layer-name="Sticky Summary Block">
+                                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-400">Tóm tắt thanh toán</h3>
+                                <div class="space-y-2 text-xs">
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Tạm tính (3 sách)</span>
+                                        <span class="font-bold text-slate-800">285.000 đ</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Phí vận chuyển</span>
+                                        <span class="font-bold text-slate-800">30.000 đ</span>
+                                    </div>
+                                    <div class="border-t border-slate-100 pt-3 flex justify-between items-baseline">
+                                        <span class="font-bold text-slate-700">Tổng cộng</span>
+                                        <span class="text-lg font-extrabold text-rose-600 font-mono">315.000 đ</span>
+                                    </div>
+                                </div>
+
+                                <button id="primary_cta_btn" onclick="inspectLayer('primary_cta_btn', event)" class="figma-layer-hover w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-xs font-bold shadow-md transition flex items-center justify-center gap-1" data-layer-name="Primary Button (CTA)">
+                                    Tiến hành thanh toán <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 2. MOCKUP CHECKOUT PAGE (HI-FI)
+        function renderMockupCheckout() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2.5 py-0.5 rounded-full font-sans uppercase">Checkout Stage</span>
+                            <h2 class="text-xl font-bold font-display text-slate-900 mt-1">Thông tin thanh toán</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs font-mono text-slate-400">
+                            <span class="text-slate-600">Step 2 of 3</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Left Form Information -->
+                        <div class="lg:col-span-8 bg-white border border-slate-100 rounded-xl p-5 space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wide text-slate-400">Địa chỉ giao hàng</h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Họ và Tên <span class="text-rose-500">*</span></label>
+                                    <input id="input-mock-name" placeholder="Vũ Tùng Dương" value="Vũ Tùng Dương" class="bg-slate-50 border border-slate-200 rounded-lg text-xs p-3 outline-none focus:border-blue-500">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Số điện thoại <span class="text-rose-500">*</span></label>
+                                    <input id="input_field" onclick="inspectLayer('input_field', event)" placeholder="0987654321" value="0987654321" class="figma-layer-hover bg-slate-50 border border-slate-200 rounded-lg text-xs p-3 outline-none focus:border-blue-500" data-layer-name="Form Text Input Control">
+                                </div>
+                                <div class="col-span-2 flex flex-col gap-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Địa chỉ nhận sách <span class="text-rose-500">*</span></label>
+                                    <input placeholder="Số 1 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội" value="Số 1 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội" class="bg-slate-50 border border-slate-200 rounded-lg text-xs p-3 outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="border-t border-slate-100 pt-4">
+                                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Phương thức thanh toán</h3>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-3 p-3 border border-blue-500 bg-blue-50/10 rounded-lg cursor-pointer">
+                                        <input type="radio" checked class="accent-blue-600">
+                                        <div class="text-xs">
+                                            <span class="font-bold text-slate-800 block">Thanh toán khi nhận sách (COD)</span>
+                                            <span class="text-[10px] text-slate-400">Kiểm tra sách kỹ trước khi gửi thanh toán tiền</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Sticky Order Summary -->
+                        <div class="lg:col-span-4">
+                            <div class="bg-white border border-slate-100 rounded-xl p-5 space-y-4">
+                                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-400">Chi tiết đơn hàng</h3>
+                                
+                                <div class="space-y-2.5 text-xs">
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Tổng giá trị sách</span>
+                                        <span class="font-bold text-slate-800">285.000 đ</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Phí vận chuyển</span>
+                                        <span class="font-bold text-slate-800">30.000 đ</span>
+                                    </div>
+                                    <div class="border-t border-slate-100 pt-2 flex justify-between items-baseline">
+                                        <span class="font-bold text-slate-700">Tổng thanh toán</span>
+                                        <span class="text-lg font-extrabold text-rose-600 font-mono">315.000 đ</span>
+                                    </div>
+                                </div>
+
+                                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-xs font-bold shadow-md transition flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-lock text-[10px]"></i> Xác nhận đặt hàng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3. MOCKUP FORM VALIDATION (EDGE CASE)
+        function renderMockupValidation() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <span class="text-[10px] bg-rose-100 text-rose-700 font-bold px-2.5 py-0.5 rounded-full font-sans uppercase">Validation Error State</span>
+                            <h2 class="text-xl font-bold font-display text-slate-900 mt-1">Cảnh báo ranh giới dữ liệu (Form Errors)</h2>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-mono">Mockup v1.0 • Spec #3</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-8 bg-white border border-slate-100 rounded-xl p-5 space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wide text-slate-400">Thông tin người nhận (Báo lỗi đỏ)</h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Error Field 1 -->
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Họ và Tên <span class="text-rose-500">*</span></label>
+                                    <input placeholder="Nhập tên" class="bg-rose-50/20 border border-rose-500 rounded-lg text-xs p-3 outline-none focus:border-rose-500">
+                                    <span class="text-[10px] text-rose-500 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Vui lòng nhập họ và tên nhận hàng.</span>
+                                </div>
+
+                                <!-- Error Field 2 -->
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Số điện thoại <span class="text-rose-500">*</span></label>
+                                    <input placeholder="Nhập sđt" class="bg-rose-50/20 border border-rose-500 rounded-lg text-xs p-3 outline-none focus:border-rose-500">
+                                    <span class="text-[10px] text-rose-500 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Số điện thoại rỗng hoặc không đúng định dạng.</span>
+                                </div>
+
+                                <div class="col-span-2 flex flex-col gap-1">
+                                    <label class="text-[11px] font-bold text-slate-600">Địa chỉ nhận sách <span class="text-rose-500">*</span></label>
+                                    <input placeholder="Số nhà, tên đường, ngõ..." class="bg-slate-50 border border-slate-200 rounded-lg text-xs p-3 outline-none focus:border-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-4 space-y-3">
+                            <div class="bg-rose-50 border border-rose-100 p-4 rounded-xl text-xs text-rose-800 leading-relaxed">
+                                <span class="font-bold flex items-center gap-1.5 mb-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Giải pháp UX chuẩn doanh nghiệp:</span>
+                                Thiết kế thể hiện rõ ràng các chỉ dẫn đỏ (Semantic red #EF4444) trực tiếp bên dưới các control nhập liệu giúp cải thiện tỷ lệ chuyển đổi (CRO) và giảm tối đa tỷ lệ hủy bỏ đơn hàng do nhầm lẫn thông tin.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 4. MOCKUP SUCCESS STATE (HI-FI) WITH REAL-TIME UX EXTENSIONS
+        function renderMockupSuccess() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2.5 py-0.5 rounded-full font-sans uppercase">Order Complete</span>
+                            <h2 class="text-xl font-bold font-display text-slate-900 mt-1">Đơn đặt sách thành công</h2>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-500">Thiết kế: Vũ Tùng Dương</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Left Content: Confirmation Card and Tracking -->
+                        <div class="lg:col-span-8 space-y-6">
+                            <div class="bg-white border border-slate-100 rounded-xl p-6 text-center space-y-4">
+                                <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto shadow-sm">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <h3 class="text-md font-extrabold text-slate-900">Chúc mừng bạn đã hoàn tất đặt sách!</h3>
+                                    <p class="text-xs text-slate-400">Yêu cầu mua hàng đã được chuyển tiếp đến hệ thống bưu tá xử lý tự động.</p>
+                                </div>
+
+                                <!-- Dynamic Interactive Shipping Progress Timeline -->
+                                <div class="border-t border-slate-100 pt-6 mt-4">
+                                    <h4 class="text-left text-xs font-bold text-slate-800 mb-4">Hành trình giao nhận dự kiến</h4>
+                                    <div class="relative flex justify-between items-center text-center">
+                                        <!-- Connection Lines -->
+                                        <div class="absolute left-6 right-6 h-1 bg-slate-100 top-3.5 z-0">
+                                            <div class="h-full bg-emerald-500" style="width: 33%"></div>
+                                        </div>
+                                        
+                                        <!-- Step 1 -->
+                                        <div class="relative z-10 flex flex-col items-center">
+                                            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+                                            <span class="text-[10px] font-bold text-slate-800 mt-1.5">Đặt đơn</span>
+                                        </div>
+                                        
+                                        <!-- Step 2 -->
+                                        <div class="relative z-10 flex flex-col items-center">
+                                            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold animate-pulse">2</div>
+                                            <span class="text-[10px] font-bold text-emerald-600 mt-1.5">Đóng gói</span>
+                                        </div>
+
+                                        <!-- Step 3 -->
+                                        <div class="relative z-10 flex flex-col items-center">
+                                            <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold">3</div>
+                                            <span class="text-[10px] font-bold text-slate-400 mt-1.5">Vận chuyển</span>
+                                        </div>
+
+                                        <!-- Step 4 -->
+                                        <div class="relative z-10 flex flex-col items-center">
+                                            <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold">4</div>
+                                            <span class="text-[10px] font-bold text-slate-400 mt-1.5">Nhận sách</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Content: Order Invoice Metadata Summary -->
+                        <div class="lg:col-span-4 space-y-4">
+                            <div class="bg-white border border-slate-100 rounded-xl p-5 space-y-4">
+                                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-400 border-b border-slate-50 pb-2">Hóa đơn điện tử</h3>
+                                <div class="space-y-3 text-xs text-slate-600">
+                                    <div class="flex justify-between">
+                                        <span>Đơn hàng:</span>
+                                        <span class="font-bold text-slate-800 font-mono">BKS-482019</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Khách hàng:</span>
+                                        <span class="font-bold text-slate-800">Vũ Tùng Dương</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Thanh toán:</span>
+                                        <span class="font-bold text-blue-600 uppercase">COD</span>
+                                    </div>
+                                    <div class="border-t border-slate-100 pt-2 flex justify-between items-baseline">
+                                        <span class="font-bold text-slate-700">Tổng thanh toán:</span>
+                                        <span class="text-md font-extrabold text-rose-600 font-mono">315.000 đ</span>
+                                    </div>
+                                </div>
+
+                                <button onclick="triggerInvoiceMock()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i> Xem chi tiết Hóa đơn
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 5. MOCKUP EMPTY STATE (HI-FI)
+        function renderMockupEmpty() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="max-w-md mx-auto text-center py-10 space-y-5">
+                    <div class="w-24 h-24 mx-auto bg-slate-50 rounded-full border border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
+                        <i class="fa-solid fa-box-open text-3xl text-slate-300"></i>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h2 class="text-md font-bold text-slate-800">Giỏ sách của bạn hiện rỗng</h2>
+                        <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+                            Hãy lấp đầy giỏ hàng của bạn bằng hàng triệu tựa sách tri thức giá trị nhất tại kho sách của chúng tôi.
+                        </p>
+                    </div>
+
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-xs font-semibold shadow">
+                        Mua sắm ngay
+                    </button>
+                </div>
+            `;
+        }
+
+        // 6. DESIGN SYSTEM COLORS (HI-FI VARIABLES)
+        function renderMockupColors() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6">
+                    <div class="border-b border-slate-100 pb-4">
+                        <span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2.5 py-0.5 rounded-full font-sans uppercase">Variables &amp; Design Tokens</span>
+                        <h2 class="text-xl font-bold font-display text-slate-900 mt-1">Hệ Thống Màu Sắc (Color Styles)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="border border-slate-100 rounded-xl p-3 bg-white shadow-sm space-y-3">
+                            <div class="h-20 bg-[#1D4ED8] rounded-lg"></div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-800 block">Primary Blue</span>
+                                <span class="text-[10px] font-mono text-slate-400 block">#1D4ED8 (600)</span>
+                            </div>
+                        </div>
+
+                        <div class="border border-slate-100 rounded-xl p-3 bg-white shadow-sm space-y-3">
+                            <div class="h-20 bg-[#0F172A] rounded-lg"></div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-800 block">Text Slate Primary</span>
+                                <span class="text-[10px] font-mono text-slate-400 block">#0F172A (900)</span>
+                            </div>
+                        </div>
+
+                        <div class="border border-slate-100 rounded-xl p-3 bg-white shadow-sm space-y-3">
+                            <div class="h-20 bg-[#EF4444] rounded-lg"></div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-800 block">Semantic Error Red</span>
+                                <span class="text-[10px] font-mono text-slate-400 block">#EF4444 (500)</span>
+                            </div>
+                        </div>
+
+                        <div class="border border-slate-100 rounded-xl p-3 bg-white shadow-sm space-y-3">
+                            <div class="h-20 bg-[#10B981] rounded-lg"></div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-800 block">Semantic Success Green</span>
+                                <span class="text-[10px] font-mono text-slate-400 block">#10B981 (500)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 7. DESIGN SYSTEM TYPOGRAPHY
+        function renderMockupTypography() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6">
+                    <div class="border-b border-slate-100 pb-4">
+                        <span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2.5 py-0.5 rounded-full font-sans uppercase">Variables &amp; Typography Hierarchy</span>
+                        <h2 class="text-xl font-bold font-display text-slate-900 mt-1">Cấp Độ Phông Chữ (Typography Scale)</h2>
+                    </div>
+
+                    <div class="bg-white border border-slate-100 rounded-xl p-5 space-y-5">
+                        <div class="flex items-start gap-4 border-b border-slate-100 pb-4">
+                            <span class="text-[10px] font-mono text-slate-400 w-24">Heading 1 (32px)</span>
+                            <h1 class="text-2xl font-bold font-display text-slate-900 flex-1">Bookstore Checkout Workspace</h1>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-slate-100 pb-4">
+                            <span class="text-[10px] font-mono text-slate-400 w-24">Heading 2 (24px)</span>
+                            <h2 class="text-lg font-bold font-display text-slate-900 flex-1">Giỏ hàng của Vũ Tùng Dương</h2>
+                        </div>
+                        <div class="flex items-start gap-4 border-b border-slate-100 pb-4">
+                            <span class="text-[10px] font-mono text-slate-400 w-24">Body (14px)</span>
+                            <p class="text-xs text-slate-600 leading-relaxed flex-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 8. DESIGN SYSTEM COMPONENTS
+        function renderMockupComponents() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6">
+                    <div class="border-b border-slate-100 pb-4">
+                        <span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2.5 py-0.5 rounded-full font-sans uppercase">Reusable Web Components</span>
+                        <h2 class="text-xl font-bold font-display text-slate-900 mt-1">Các Thành Phần Tái Sử Dụng (Components)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white border border-slate-100 rounded-xl p-5 space-y-3">
+                            <span class="text-[10px] font-mono text-slate-400 block mb-2">BUTTON COMPONENTS</span>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-sans font-semibold text-xs px-4 py-2 shadow-sm">
+                                Primary Button
+                            </button>
+                            <button class="border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-semibold text-xs px-4 py-2">
+                                Secondary Button
+                            </button>
+                        </div>
+
+                        <div class="bg-white border border-slate-100 rounded-xl p-5 space-y-3">
+                            <span class="text-[10px] font-mono text-slate-400 block mb-2">INPUT COMPONENTS</span>
+                            <input placeholder="Nhập văn bản..." class="bg-white border border-slate-200 rounded-lg text-xs p-2.5 outline-none w-full">
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 9. LO-FI SKELETON WIREFRAME CART (LOW FIDELITY)
+        function renderMockupLofiCart() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6 lofi-skeleton">
+                    <div class="border-b border-slate-300 pb-4">
+                        <span class="text-[9px] bg-slate-200 border border-slate-400 text-slate-700 font-bold font-mono px-2 py-0.5 uppercase">Lo-Fi Skeleton Frame</span>
+                        <h2 class="text-lg font-bold font-mono text-slate-800 mt-1">Wireframe nháp: Giỏ hàng</h2>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-6">
+                        <div class="col-span-8 border border-dashed border-slate-400 p-4 rounded-none space-y-4">
+                            <div class="h-6 bg-slate-200 border border-slate-400 w-1/3"></div>
+                            
+                            <div class="flex items-center gap-4 py-3 border-b border-dashed border-slate-300">
+                                <div class="w-12 h-16 bg-slate-100 border border-slate-400 flex items-center justify-center font-mono text-[9px] text-slate-500">IMAGE</div>
+                                <div class="space-y-1 flex-1">
+                                    <div class="h-4 bg-slate-200 border border-slate-400 w-1/2"></div>
+                                    <div class="h-3 bg-slate-100 border border-slate-300 w-1/4"></div>
+                                </div>
+                                <div class="w-16 h-8 bg-slate-100 border border-slate-400"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-span-4 border border-slate-400 p-4 rounded-none space-y-4">
+                            <div class="h-5 bg-slate-200 border border-slate-400 w-1/2"></div>
+                            <div class="h-10 bg-slate-300 border border-slate-400"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 10. LO-FI SKELETON WIREFRAME CHECKOUT (LOW FIDELITY)
+        function renderMockupLofiCheckout() {
+            return `
+                <div onclick="inspectLayer('canvas_wrapper')" class="space-y-6 lofi-skeleton">
+                    <div class="border-b border-slate-300 pb-4">
+                        <span class="text-[9px] bg-slate-200 border border-slate-400 text-slate-700 font-bold font-mono px-2 py-0.5 uppercase">Lo-Fi Skeleton Frame</span>
+                        <h2 class="text-lg font-bold font-mono text-slate-800 mt-1">Wireframe nháp: Form đặt hàng</h2>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-6">
+                        <div class="col-span-8 border border-slate-400 p-4 rounded-none space-y-4">
+                            <div class="h-5 bg-slate-200 border border-slate-400 w-1/2"></div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="h-10 bg-slate-100 border border-slate-300"></div>
+                                <div class="h-10 bg-slate-100 border border-slate-300"></div>
+                            </div>
+                        </div>
+                        <div class="col-span-4 border border-dashed border-slate-400 p-4 rounded-none space-y-3">
+                            <div class="h-10 bg-slate-300 border border-slate-400"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle Figma wire mode and draw connections on canvas
+        function toggleFigmaWires() {
+            state.showWires = !state.showWires;
+            const btn = document.getElementById('btn-toggle-wires');
+            const svgEl = document.getElementById('figma-wires-svg');
+
+            if (state.showWires) {
+                btn.className = "w-full bg-[#0C8CE9] hover:bg-[#007cd0] border border-transparent text-white text-[11px] py-1.5 rounded font-semibold transition";
+                btn.innerHTML = `<i class="fa-solid fa-circle-nodes text-white mr-1"></i> Ẩn sơ đồ dây nối Figma (Wires)`;
+                svgEl.classList.remove('hidden');
+                drawFigmaVectorWires();
+            } else {
+                btn.className = "w-full bg-[#333333] hover:bg-[#444444] border border-figma-border text-white text-[11px] py-1.5 rounded font-semibold transition";
+                btn.innerHTML = `<i class="fa-solid fa-circle-nodes text-figma-active mr-1"></i> Hiện sơ đồ dây nối Figma (Wires)`;
+                svgEl.classList.add('hidden');
+                svgEl.innerHTML = '';
+            }
+        }
+
+        // Drawing simulated SVG wires on top of Figma workspace
+        function drawFigmaVectorWires() {
+            const svg = document.getElementById('figma-wires-svg');
+            svg.innerHTML = ''; // reset previous paths
+
+            // We only show arrows when on the Hi-Fi page
+            if (state.activePage !== 'hifi') return;
+
+            // Define mockup hot coordinates to represent wire lines
+            const activeFrame = document.getElementById('active-mockup-frame');
+            if (!activeFrame) return;
+
+            const frameRect = activeFrame.getBoundingClientRect();
+            const bodyRect = document.body.getBoundingClientRect();
+
+            // Create curved dynamic arrows pointing connections
+            const ctaBtn = document.getElementById('primary_cta_btn');
+            if (ctaBtn) {
+                const btnRect = ctaBtn.getBoundingClientRect();
+                const startX = btnRect.right - bodyRect.left;
+                const startY = btnRect.top + (btnRect.height / 2) - bodyRect.top;
+                const endX = startX + 120;
+                const endY = startY - 80;
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                const d = `M ${startX} ${startY} Q ${startX + 50} ${startY} ${startX + 60} ${startY - 40} T ${endX} ${endY}`;
+                path.setAttribute("d", d);
+                path.setAttribute("stroke", "#0C8CE9");
+                path.setAttribute("stroke-width", "3");
+                path.setAttribute("fill", "none");
+                path.setAttribute("marker-end", "url(#arrow)");
+                svg.appendChild(path);
+            }
+
+            // Define arrowhead marker
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            defs.innerHTML = `
+                <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#0C8CE9" />
+                </marker>
+            `;
+            svg.appendChild(defs);
+        }
+
+        // Toggles the simulated overlay prototype player
+        function togglePrototypeMode() {
+            const overlay = document.getElementById('prototype-overlay');
+            overlay.classList.toggle('hidden');
+            if (!overlay.classList.contains('hidden')) {
+                resetPrototypeDemo();
+            }
+        }
+
+        function resetPrototypeDemo() {
+            state.proto = JSON.parse(defaultProtoState);
+            setProtoStep('cart');
+        }
+
+        function setProtoStep(step) {
+            state.proto.currentStep = step;
+
+            // Update steps dot indicators
+            const steps = ['cart', 'checkout', 'success'];
+            steps.forEach(s => {
+                const el = document.getElementById(`p-dot-${s}`);
+                if (el) {
+                    if (s === step) {
+                        el.className = "px-2.5 py-1 rounded bg-blue-600 text-white font-bold";
+                    } else {
+                        el.className = "px-2.5 py-1 rounded bg-slate-800 text-slate-400";
+                    }
+                }
+            });
+
+            renderProtoContent();
+        }
+
+        // Calculate prototype billing math dynamically
+        function calcSubtotal() {
+            return state.proto.cartItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
+        }
+
+        function calcTotal() {
+            const sub = calcSubtotal();
+            return sub - state.proto.discountValue + (state.proto.cartItems.length > 0 ? state.proto.shippingFee : 0);
+        }
+
+        function updateProtoQty(id, delta) {
+            const item = state.proto.cartItems.find(i => i.id === id);
+            if (item) {
+                item.qty = Math.max(1, item.qty + delta);
+                renderProtoContent();
+            }
+        }
+
+        function removeProtoItem(id) {
+            state.proto.cartItems = state.proto.cartItems.filter(i => i.id !== id);
+            if (state.proto.cartItems.length === 0) {
+                setProtoStep('empty');
+            } else {
+                renderProtoContent();
+            }
+        }
+
+        function applyPromo() {
+            const inp = document.getElementById('promo-code-input');
+            if (inp) {
+                const val = inp.value.trim().toUpperCase();
+                if (val === 'BOOKVIP') {
+                    state.proto.promoApplied = true;
+                    state.proto.discountValue = 30000;
+                    renderProtoContent();
+                    showToast("Áp dụng mã ưu đãi BOOKVIP thành công (-30k)!");
+                } else {
+                    showToast("Mã khuyến mại không đúng! Thử: BOOKVIP");
+                }
+            }
+        }
+
+        function updateProtoPayment(method) {
+            state.proto.paymentMethod = method;
+            renderProtoContent();
+        }
+
+        // Trigger hotspots flash when clicking empty prototype workspace areas (Classic Figma behavior!)
+        function triggerHotspotFlash(event) {
+            // Check if user clicked a non-hotspot area
+            const isClickable = event.target.closest('[data-hotspot="true"]') || 
+                                event.target.closest('button') || 
+                                event.target.closest('input') || 
+                                event.target.closest('select') || 
+                                event.target.closest('a');
+            
+            if (!isClickable) {
+                // Find all clickable prototype nodes on active step
+                const hotspots = document.querySelectorAll('[data-hotspot="true"]');
+                hotspots.forEach(el => {
+                    el.classList.add('hotspot-active-flash');
+                    setTimeout(() => {
+                        el.classList.remove('hotspot-active-flash');
+                    }, 400);
+                });
+            }
+        }
+
+        // Form validate submission trigger for interactive demo
+        function validateAndSubmitOrder() {
+            let hasError = false;
+
+            // Re-read inputs
+            const nameInp = document.getElementById('p-input-name');
+            const phoneInp = document.getElementById('p-input-phone');
+            const addrInp = document.getElementById('p-input-address');
+
+            if (nameInp) state.proto.fullName = nameInp.value;
+            if (phoneInp) state.proto.phone = phoneInp.value;
+            if (addrInp) state.proto.address = addrInp.value;
+
+            if (state.proto.fullName.trim() === '') {
+                state.proto.errors.fullName = true;
+                hasError = true;
+            } else {
+                state.proto.errors.fullName = false;
+            }
+
+            const phoneRegex = /^[0-9]{10,11}$/;
+            if (state.proto.phone.trim() === '' || !phoneRegex.test(state.proto.phone.trim())) {
+                state.proto.errors.phone = true;
+                hasError = true;
+            } else {
+                state.proto.errors.phone = false;
+            }
+
+            if (state.proto.address.trim() === '') {
+                state.proto.errors.address = true;
+                hasError = true;
+            } else {
+                state.proto.errors.address = false;
+            }
+
+            if (hasError) {
+                renderProtoContent();
+                showToast("Vui lòng sửa các trường lỗi màu đỏ!");
+            } else {
+                // If VNPay chosen, simulate VietQR scan flow first to elevate UX spec
+                if (state.proto.paymentMethod === 'vnpay') {
+                    openVNPayModal();
+                } else {
+                    setProtoStep('success');
+                }
+            }
+        }
+
+        // VNPay QR Simulation Overlay actions
+        function openVNPayModal() {
+            const total = calcTotal();
+            document.getElementById('vnpay-amount').innerText = total.toLocaleString('vi-VN') + " đ";
+            // Custom mock QR generator
+            document.getElementById('vnpay-qr-image').src = `https://placehold.co/180x180/004b91/ffffff?text=VietQR+BKS+315k`;
+            document.getElementById('vnpay-modal').classList.remove('hidden');
+        }
+
+        function closeVNPayModal() {
+            document.getElementById('vnpay-modal').classList.add('hidden');
+        }
+
+        function confirmVNPayPayment() {
+            closeVNPayModal();
+            showToast("Thanh toán thành công! Đang chuyển hướng...");
+            setTimeout(() => {
+                setProtoStep('success');
+            }, 800);
+        }
+
+        // Detailed invoice PDF preview simulator
+        function triggerInvoiceMock() {
+            const body = document.getElementById('receipt-invoice-body');
+            const total = calcTotal();
+            const sub = calcSubtotal();
+            const itemsList = state.proto.cartItems.map(item => `
+                <div class="flex justify-between">
+                  <span>${item.title} (x${item.qty})</span>
+                  <span>${(item.price * item.qty).toLocaleString('vi-VN')} đ</span>
+                </div>
+            `).join('');
+
+            body.innerHTML = `
+                <div class="text-center font-bold text-xs border-b border-dashed border-slate-300 pb-2 mb-2">
+                    CỬA HÀNG SÁCH BOOKSTORE VN<br>
+                    SĐT: 1900 8198 - HÀ NỘI<br>
+                    -------------------------
+                </div>
+                <div class="space-y-1">
+                    <div>MÃ HÓA ĐƠN: BKS-482019</div>
+                    <div>KHÁCH HÀNG: ${state.proto.fullName.toUpperCase()}</div>
+                    <div>ĐỊA CHỈ: ${state.proto.address}</div>
+                    <div>SĐT: ${state.proto.phone}</div>
+                </div>
+                <div class="border-t border-b border-dashed border-slate-300 py-2 my-2 space-y-1.5">
+                    ${itemsList}
+                </div>
+                <div class="space-y-1.5 font-bold">
+                    <div class="flex justify-between">
+                        <span>TẠM TÍNH:</span>
+                        <span>${sub.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                    <div class="flex justify-between text-emerald-600">
+                        <span>KHUYẾN MẠI:</span>
+                        <span>-${state.proto.discountValue.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>PHÍ SHIP:</span>
+                        <span>${state.proto.shippingFee.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                    <div class="flex justify-between text-rose-600 text-[12px] border-t border-dashed border-slate-300 pt-1.5">
+                        <span>TỔNG THÀNH TIỀN:</span>
+                        <span>${total.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                </div>
+                <div class="text-center text-[9px] text-slate-400 pt-3">
+                    Xin cảm ơn quý khách. Hẹn gặp lại!<br>
+                    Thiết kế sản phẩm bởi Vũ Tùng Dương
+                </div>
+            `;
+
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
+
+        // Render functions for prototype steps
+        function renderProtoContent() {
+            const body = document.getElementById('prototype-canvas-body');
+            const sub = calcSubtotal();
+            const total = calcTotal();
+
+            // RENDER PROTO STEP 1: CART
+            if (state.proto.currentStep === 'cart') {
+                let itemsHtml = '';
+                state.proto.cartItems.forEach(item => {
+                    itemsHtml += `
+                        <div class="flex items-center justify-between py-4 border-b border-slate-100 last:border-0">
+                            <div class="flex items-center gap-4">
+                                ${renderBookCoverSVG(item.title, item.imgGradient, item.icon)}
+                                <div>
+                                    <h4 class="font-bold text-sm text-slate-800">${item.title}</h4>
+                                    <p class="text-xs text-slate-400">${item.author}</p>
+                                    <p class="text-xs font-bold text-rose-500 mt-1">${(item.price).toLocaleString('vi-VN')} đ</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white">
+                                    <button onclick="updateProtoQty(${item.id}, -1)" class="px-2.5 py-1 text-slate-400 hover:bg-slate-50 transition font-bold" data-hotspot="true">-</button>
+                                    <span class="px-3.5 py-1 text-xs text-slate-800 font-bold bg-slate-50/50 min-w-[32px] text-center">${item.qty}</span>
+                                    <button onclick="updateProtoQty(${item.id}, 1)" class="px-2.5 py-1 text-slate-400 hover:bg-slate-50 transition font-bold" data-hotspot="true">+</button>
+                                </div>
+                                <button onclick="removeProtoItem(${item.id})" class="text-slate-400 hover:text-rose-500 transition px-2" data-hotspot="true">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                body.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Left Panel -->
+                        <div class="lg:col-span-8 flex flex-col gap-4">
+                            <div class="bg-white border border-slate-200/60 rounded-xl p-6 shadow-sm">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="text-lg font-bold text-slate-800">Giỏ hàng của bạn</h3>
+                                    <span class="text-xs font-bold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">${state.proto.cartItems.length} sản phẩm</span>
+                                </div>
+                                <div class="divide-y divide-slate-100">
+                                    ${itemsHtml}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Summary -->
+                        <div class="lg:col-span-4 space-y-4">
+                            <div class="bg-white border border-slate-200/60 rounded-xl p-6 shadow-sm space-y-4">
+                                <h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3">Tóm tắt đơn mua</h3>
+                                
+                                <div class="space-y-3 text-xs">
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Tạm tính</span>
+                                        <span class="font-bold text-slate-800">${sub.toLocaleString('vi-VN')} đ</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Mã ưu đãi (BOOKVIP)</span>
+                                        <span class="font-bold text-emerald-500">-${state.proto.discountValue.toLocaleString('vi-VN')} đ</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-500">
+                                        <span>Phí vận chuyển</span>
+                                        <span class="font-bold text-slate-800">${state.proto.shippingFee.toLocaleString('vi-VN')} đ</span>
+                                    </div>
+                                    <hr class="border-slate-100">
+                                    <div class="flex justify-between items-baseline pt-2">
+                                        <span class="text-sm font-bold text-slate-800">Tổng cộng</span>
+                                        <span class="text-lg font-extrabold text-rose-600 font-mono">${total.toLocaleString('vi-VN')} đ</span>
+                                    </div>
+                                </div>
+
+                                <!-- Promo entry -->
+                                <div class="flex gap-2 pt-2">
+                                    <input type="text" id="promo-code-input" placeholder="Mã giảm giá (BOOKVIP)" class="bg-slate-50 border border-slate-200 rounded-lg text-xs p-2.5 uppercase font-bold flex-1 outline-none animate-none" value="${state.proto.promoApplied ? 'BOOKVIP' : ''}" ${state.proto.promoApplied ? 'disabled' : ''}>
+                                    <button onclick="applyPromo()" class="bg-slate-100 hover:bg-slate-200 text-xs font-semibold px-3 py-2 rounded-lg transition" ${state.proto.promoApplied ? 'disabled' : ''} data-hotspot="true">
+                                        ${state.proto.promoApplied ? '<i class="fa-solid fa-check text-emerald-500"></i>' : 'Áp dụng'}
+                                    </button>
+                                </div>
+
+                                <button onclick="setProtoStep('checkout')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-lg text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5" data-hotspot="true">
+                                    Tiến hành thanh toán <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // RENDER PROTO STEP 2: CHECKOUT
+            else if (state.proto.currentStep === 'checkout') {
+                body.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Left checkout form -->
+                        <div class="lg:col-span-8 bg-white border border-slate-200/60 rounded-xl p-6 shadow-sm space-y-6">
+                            <div class="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                                <span onclick="setProtoStep('cart')" class="text-emerald-500 font-bold flex items-center gap-1 cursor-pointer" data-hotspot="true"><i class="fa-regular fa-circle-check"></i> Giỏ hàng</span>
+                                <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                <span class="text-slate-800 font-bold bg-slate-100 px-2 py-0.5 rounded">2. Thông tin thanh toán</span>
+                            </div>
+
+                            <h3 class="text-md font-bold text-slate-800">Địa chỉ giao hàng</h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="col-span-2 md:col-span-1 flex flex-col gap-1.5">
+                                    <label class="text-xs font-bold text-slate-600">Họ và Tên <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="p-input-name" placeholder="Vũ Tùng Dương" value="${state.proto.fullName}" 
+                                           class="bg-slate-50 border ${state.proto.errors.fullName ? 'border-rose-500 bg-rose-50/10 animate-shake' : 'border-slate-200'} rounded-lg text-xs p-3 outline-none focus:border-blue-500">
+                                    ${state.proto.errors.fullName ? '<span class="text-[10px] text-rose-500 font-bold"><i class="fa-solid fa-circle-exclamation"></i> Vui lòng nhập họ tên nhận hàng.</span>' : ''}
+                                </div>
+                                <div class="col-span-2 md:col-span-1 flex flex-col gap-1.5">
+                                    <label class="text-xs font-bold text-slate-600">Số điện thoại <span class="text-rose-500">*</span></label>
+                                    <input type="tel" id="p-input-phone" placeholder="0987654321" value="${state.proto.phone}"
+                                           class="bg-slate-50 border ${state.proto.errors.phone ? 'border-rose-500 bg-rose-50/10 animate-shake' : 'border-slate-200'} rounded-lg text-xs p-3 outline-none focus:border-blue-500">
+                                    ${state.proto.errors.phone ? '<span class="text-[10px] text-rose-500 font-bold"><i class="fa-solid fa-circle-exclamation"></i> Số điện thoại 10 số bắt buộc.</span>' : ''}
+                                </div>
+                                <div class="col-span-2 flex flex-col gap-1.5">
+                                    <label class="text-xs font-bold text-slate-600">Địa chỉ nhận sách <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="p-input-address" placeholder="Địa chỉ chi tiết, ngõ, số nhà..." value="${state.proto.address}"
+                                           class="bg-slate-50 border ${state.proto.errors.address ? 'border-rose-500 bg-rose-50/10 animate-shake' : 'border-slate-200'} rounded-lg text-xs p-3 outline-none focus:border-blue-500">
+                                    ${state.proto.errors.address ? '<span class="text-[10px] text-rose-500 font-bold"><i class="fa-solid fa-circle-exclamation"></i> Vui lòng cung cấp địa chỉ nhận sách.</span>' : ''}
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100">
+
+                            <!-- Payment options -->
+                            <h3 class="text-sm font-bold text-slate-800">Phương thức thanh toán</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-start gap-3 p-3.5 border ${state.proto.paymentMethod === 'cod' ? 'border-blue-500 bg-blue-50/10' : 'border-slate-200'} rounded-xl cursor-pointer hover:bg-slate-50 transition relative" data-hotspot="true">
+                                    <input type="radio" name="pMethod" value="cod" class="mt-1" onchange="updateProtoPayment('cod')" ${state.proto.paymentMethod === 'cod' ? 'checked' : ''}>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-800">Thanh toán trực tiếp khi nhận hàng (COD)</h4>
+                                        <p class="text-[11px] text-slate-400 mt-0.5">Thanh toán bằng tiền mặt trực tiếp cho bưu tá khi bạn đã nhận sách thành công.</p>
+                                    </div>
+                                    <i class="fa-solid fa-wallet text-slate-400 text-lg absolute right-4 top-4"></i>
+                                </label>
+                                <label class="flex items-start gap-3 p-3.5 border ${state.proto.paymentMethod === 'vnpay' ? 'border-blue-500 bg-blue-50/10' : 'border-slate-200'} rounded-xl cursor-pointer hover:bg-slate-50 transition relative" data-hotspot="true">
+                                    <input type="radio" name="pMethod" value="vnpay" class="mt-1" onchange="updateProtoPayment('vnpay')" ${state.proto.paymentMethod === 'vnpay' ? 'checked' : ''}>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-800">Cổng thanh toán điện tử VNPay</h4>
+                                        <p class="text-[11px] text-slate-400 mt-0.5">Quét mã QR qua ứng dụng ngân hàng hoặc các ví điện tử được liên kết.</p>
+                                    </div>
+                                    <i class="fa-solid fa-qrcode text-slate-400 text-lg absolute right-4 top-4"></i>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Right summary order block -->
+                        <div class="lg:col-span-4">
+                            <div class="bg-white border border-slate-200/60 rounded-xl p-6 shadow-sm space-y-4">
+                                <h3 class="text-sm font-bold text-slate-800">Chi tiết đơn hàng</h3>
+                                <div class="divide-y divide-slate-100 max-h-[160px] overflow-y-auto pr-1">
+                                    ${state.proto.cartItems.map(item => `
+                                        <div class="flex justify-between items-center py-2 text-xs text-slate-600">
+                                            <span class="truncate max-w-[70%] font-medium">${item.title} (x${item.qty})</span>
+                                            <span class="font-bold text-slate-800">${(item.price * item.qty).toLocaleString('vi-VN')} đ</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <hr class="border-slate-100">
+                                <div class="flex justify-between items-baseline">
+                                    <span class="text-xs font-bold text-slate-500">Thành tiền</span>
+                                    <span class="text-lg font-extrabold text-rose-600 font-mono">${total.toLocaleString('vi-VN')} đ</span>
+                                </div>
+
+                                <button onclick="validateAndSubmitOrder()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg text-xs font-bold tracking-wider uppercase shadow-md flex items-center justify-center gap-1.5 transition" data-hotspot="true">
+                                    <i class="fa-solid fa-lock text-[10px]"></i> Xác nhận thanh toán
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Bind elements data change inputs
+                bindProtoFormInputs();
+            }
+
+            // RENDER PROTO STEP 3: SUCCESS (ENTERPRISE HIGH QUALITY UX TRACKING)
+            else if (state.proto.currentStep === 'success') {
+                const total = calcTotal();
+                body.innerHTML = `
+                    <div class="max-w-xl mx-auto space-y-6 py-6 px-2">
+                        <!-- Top status card -->
+                        <div class="bg-white border border-slate-200/60 rounded-xl p-6 text-center space-y-3 shadow-sm">
+                            <div class="w-14 h-14 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-3xl mx-auto">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+
+                            <div class="space-y-1">
+                                <h2 class="text-lg font-extrabold text-slate-900">Đặt sách thành công rồi!</h2>
+                                <p class="text-xs text-slate-400">Đơn hàng của bạn đã được duyệt và đang đóng gói.</p>
+                            </div>
+
+                            <!-- Interactive Progress Stepper Delivery Tracker -->
+                            <div class="border-t border-slate-100 pt-6 mt-4 text-left">
+                                <h4 class="text-xs font-bold text-slate-800 mb-4 flex items-center gap-1"><i class="fa-solid fa-truck-fast text-blue-500"></i> Theo dõi hành trình giao sách:</h4>
+                                <div class="relative flex justify-between items-center text-center">
+                                    <div class="absolute left-6 right-6 h-1 bg-slate-100 top-3.5 z-0">
+                                        <div class="h-full bg-emerald-500" style="width: 33%"></div>
+                                    </div>
+                                    
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-file-invoice"></i></div>
+                                        <span class="text-[9px] font-bold text-slate-800 mt-1.5">Ghi nhận</span>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold animate-pulse"><i class="fa-solid fa-box-open"></i></div>
+                                        <span class="text-[9px] font-bold text-emerald-600 mt-1.5">Chuẩn bị</span>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-road"></i></div>
+                                        <span class="text-[9px] font-bold text-slate-400 mt-1.5">Vận chuyển</span>
+                                    </div>
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-house-chimney"></i></div>
+                                        <span class="text-[9px] font-bold text-slate-400 mt-1.5">Nhận sách</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Receipt Info Card with download action -->
+                        <div class="bg-white border border-slate-200/60 p-5 rounded-xl space-y-4 shadow-sm text-left">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                                <span class="font-bold text-xs text-slate-800">Thông tin nhận hàng</span>
+                                <span class="text-xs font-mono text-slate-400">Mã đơn: BKS-${Math.floor(Math.random() * 900000 + 100000)}</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 text-xs">
+                                <div>
+                                    <span class="text-slate-400 block mb-0.5">Người nhận:</span>
+                                    <span class="font-bold text-slate-800">${state.proto.fullName}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block mb-0.5">Số điện thoại:</span>
+                                    <span class="font-bold text-slate-800 font-mono">${state.proto.phone}</span>
+                                </div>
+                                <div class="col-span-2">
+                                    <span class="text-slate-400 block mb-0.5">Địa chỉ giao:</span>
+                                    <span class="font-bold text-slate-800">${state.proto.address}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block mb-0.5">Hình thức:</span>
+                                    <span class="font-bold text-slate-800 uppercase">${state.proto.paymentMethod}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block mb-0.5">Thanh toán:</span>
+                                    <span class="font-bold text-rose-600 font-mono">${total.toLocaleString('vi-VN')} đ</span>
+                                </div>
+                            </div>
+
+                            <button onclick="triggerInvoiceMock()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5" data-hotspot="true">
+                                <i class="fa-solid fa-file-invoice-dollar"></i> Xem & In Hóa đơn điện tử (PDF)
+                            </button>
+                        </div>
+
+                        <!-- Navigation controls -->
+                        <div class="flex gap-3 justify-center">
+                            <button onclick="resetPrototypeDemo()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 px-5 rounded-lg text-xs font-semibold transition" data-hotspot="true">
+                                Tiếp tục mua sắm
+                            </button>
+                            <button onclick="togglePrototypeMode()" class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-5 rounded-lg text-xs font-semibold transition" data-hotspot="true">
+                                Quay lại Figma Editor
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // RENDER PROTO STEP 4: EMPTY STATE
+            else if (state.proto.currentStep === 'empty') {
+                body.innerHTML = `
+                    <div class="max-w-md mx-auto text-center py-16 space-y-6">
+                        <div class="w-24 h-24 mx-auto bg-slate-100 border border-dashed border-slate-300 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-box-open text-3xl text-slate-300"></i>
+                        </div>
+
+                        <div class="space-y-2">
+                            <h2 class="text-lg font-bold text-slate-800">Giỏ sách của bạn hiện rỗng</h2>
+                            <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+                                Hãy thêm sản phẩm tri thức giá trị nhất vào giỏ mua hàng để tận dụng kho mã khuyến mại.
+                            </p>
+                        </div>
+
+                        <button onclick="resetPrototypeDemo()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg text-xs font-semibold shadow transition" data-hotspot="true">
+                            Thêm sản phẩm lại
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Two-way bindings for prototype form elements
+        function bindProtoFormInputs() {
+            const nameEl = document.getElementById('p-input-name');
+            const phoneEl = document.getElementById('p-input-phone');
+            const addrEl = document.getElementById('p-input-address');
+
+            if (nameEl) {
+                nameEl.addEventListener('input', (e) => {
+                    state.proto.fullName = e.target.value;
+                    state.proto.errors.fullName = false;
+                });
+            }
+            if (phoneEl) {
+                phoneEl.addEventListener('input', (e) => {
+                    state.proto.phone = e.target.value;
+                    state.proto.errors.phone = false;
+                });
+            }
+            if (addrEl) {
+                addrEl.addEventListener('input', (e) => {
+                    state.proto.address = e.target.value;
+                    state.proto.errors.address = false;
+                });
+            }
+        }
+    </script>
+</body>
+</html>
